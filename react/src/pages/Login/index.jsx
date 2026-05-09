@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PawPrint, Loader2, Heart, ShieldCheck, BadgeCheck } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext'
 import './login.css';
 
 const LoginScreen = () => {
@@ -13,6 +14,7 @@ const LoginScreen = () => {
     e.preventDefault();
     try {
       await signIn(email, password);
+      navigate('/home');
     } catch (error) {
       alert('Erro no Login');
     }

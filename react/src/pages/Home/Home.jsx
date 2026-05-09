@@ -2,8 +2,6 @@ import React from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { PawPrint, QrCode, User } from 'lucide-react'; // Ícones para web
 import './Home.css';
-
-// Importe suas telas adaptadas para web aqui
 import FeedScreen from '../Feed/Feed';
 
 const Home = () => {

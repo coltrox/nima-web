@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './assets/contexts/AuthContext'; // Ajuste o caminho se necessário
+import { AuthProvider } from './pages/contexts/AuthContext'; 
 import LoginScreen from './pages/Login/index';
 import HomeScreen from './pages/Home/Home';
 import './App.css';
@@ -7,7 +7,6 @@ import './App.css';
 function App() {
   return (
     <BrowserRouter>
-      {/* O AuthProvider envolve todo o app para que todos saibam quem está logado */}
       <AuthProvider>
         <Routes>
           {/* Rota inicial: manda para o Login */}

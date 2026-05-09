@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PawPrint, ArrowRight, Dog, Cat } from 'lucide-react';
-import { useUser } from '../../assets/contexts/UserContext';
+import { useUser } from '../contexts/UserContext';
 import './feed.css';
 
 const mockPets = [
