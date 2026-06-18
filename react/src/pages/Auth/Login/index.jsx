@@ -19,10 +19,26 @@ const LoginScreen = () => {
     
     try {
       const data = await authService.login(email, password);
+      
       if (data.token) {
         sessionStorage.setItem('@nima_token', data.token);
       }
-      navigate('/home');
+      
+      // Armazena o cargo para controle de estado, se necessário
+      if (data.user?.cargo) {
+        sessionStorage.setItem('@nima_user_role', data.user.cargo);
+      }
+
+      // CORREÇÃO: Redirecionamento baseado nas novas regras de negócio e rotas de destino
+      if (data.user?.cargo === 'desenvolvedor') {
+        navigate('/dev-dashboard');
+      } else if (data.user?.cargo === 'ong') {
+        navigate('/ong-dashboard');
+      } else {
+        // Fallback preventivo caso seja um usuário comum sem painel estruturado
+        setErrorMessage('Este painel é restrito para Desenvolvedores e ONGs cadastradas.');
+      }
+
     } catch (error) {
       setErrorMessage(typeof error === 'string' ? error : 'Falha na autenticação corporativa. Verifique os dados e tente novamente.');
     } finally {
@@ -85,7 +101,7 @@ const LoginScreen = () => {
                 <PawPrint size={32} className="login-logo-icon" />
               </div>
               <h1 className="login-header-title">Acesso Restrito</h1>
-              <p className="login-header-subtitle">Insira suas credenciais institucionais para acessar o painel de ONGs ou administradores.</p>
+              <p className="login-header-subtitle">Insira suas credenciais institucionais para acessar o painel de ONGs ou desenvolvedores.</p>
             </header>
 
             <main className="login-content-area">
@@ -98,7 +114,7 @@ const LoginScreen = () => {
                 )}
 
                 <div className="login-input-group">
-                  <label className="login-input-label">E-mail Corporativo ou Admin</label>
+                  <label className="login-input-label">E-mail Corporativo ou Dev</label>
                   <div className="login-input-field-wrapper">
                     <Mail size={18} className="login-input-icon" />
                     <input 

@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext.jsx'; // Ajustado assumindo que 'contexts' fica na raiz de 'src'
-import LoginScreen from './pages/Auth/Login/index.jsx';     // Adicionada a extensão .jsx explícita para o Vite
-import HomeScreen from './pages/Home/Home.jsx';       // Adicionada a extensão .jsx explícita para o Vite
+import { AuthProvider } from './contexts/AuthContext.jsx'; 
+import LoginScreen from './pages/Auth/Login/index.jsx';     
+import DevDashboard from './pages/Home/Dev/DevDashboard.jsx'; 
+import OngDashboard from './pages/Home/Ong/OngDashboard.jsx'; 
 import './App.css';
 
 function App() {
@@ -9,18 +10,19 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Rota inicial: manda para o Login */}
+          {/* Rota inicial: Redireciona obrigatoriamente para o Login */}
           <Route path="/" element={<Navigate to="/login" />} />
           
-          {/* Tela de Login */}
+          {/* Tela de Login Principal */}
           <Route path="/login" element={<LoginScreen />} />
           
-          {/* A Home e todas as suas sub-rotas (Feed, Perfil, etc). 
-              O '/*' é fundamental para que as rotas dentro de Home.jsx funcionem.
-          */}
-          <Route path="/home/*" element={<HomeScreen />} />
+          {/* Painel Exclusivo do Desenvolvedor (Métricas globais e infraestrutura) */}
+          <Route path="/dev-dashboard/*" element={<DevDashboard />} />
+
+          {/* Painel Exclusivo da ONG (Animais, triagens da IA, redes sociais e termos) */}
+          <Route path="/ong-dashboard/*" element={<OngDashboard />} />
           
-          {/* Caso o usuário digite uma URL que não existe */}
+          {/* Qualquer rota inexistente ou antiga manda o usuário de volta para o Login */}
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </AuthProvider>
