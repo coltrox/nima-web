@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './pages/contexts/AuthContext'; 
-import LoginScreen from './pages/Login/index';
-import HomeScreen from './pages/Home/Home';
+import { AuthProvider } from './contexts/AuthContext.jsx'; // Ajustado assumindo que 'contexts' fica na raiz de 'src'
+import LoginScreen from './pages/Auth/Login/index.jsx';     // Adicionada a extensão .jsx explícita para o Vite
+import HomeScreen from './pages/Home/Home.jsx';       // Adicionada a extensão .jsx explícita para o Vite
 import './App.css';
 
 function App() {
@@ -16,7 +16,7 @@ function App() {
           <Route path="/login" element={<LoginScreen />} />
           
           {/* A Home e todas as suas sub-rotas (Feed, Perfil, etc). 
-            O '/*' é fundamental para que as rotas dentro de Home.jsx funcionem.
+              O '/*' é fundamental para que as rotas dentro de Home.jsx funcionem.
           */}
           <Route path="/home/*" element={<HomeScreen />} />
           
