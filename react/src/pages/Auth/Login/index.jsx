@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PawPrint, Loader2, Heart, ShieldCheck, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import authService from '../authService';
+import authService from '../../../services/authService';
 import './Login.css';
 
 const LoginScreen = () => {

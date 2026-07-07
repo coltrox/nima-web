@@ -1,25 +1,51 @@
-import React, { useState } from 'react';
+// src/components/OngDashboard.jsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, ClipboardList, FileCheck, LogOut, Plus, Trash2 } from 'lucide-react';
+import { Heart, ClipboardList, FileCheck, LogOut, Plus, Trash2, RefreshCw } from 'lucide-react';
+
+import { animalService } from '../../../services/animalService'; 
 
 const OngDashboard = () => {
   const navigate = useNavigate();
 
-  // Estados locais simulados e dinâmicos para a demonstração da ONG
-  const [animais, setAnimais] = useState([
-    { id: 1, nome: 'Apollo', especie: 'Cachorro', idade: '2 anos', status: 'Disponível' },
-    { id: 2, nome: 'Luna', especie: 'Gato', idade: '5 meses', status: 'Em Triagem' },
-    { id: 3, nome: 'Thor', especie: 'Cachorro', idade: '1 ano', status: 'Disponível' }
-  ]);
+  // Estados reais integrados com o Back-end
+  const [animais, setAnimais] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erroMensagem, setErroMensagem] = useState('');
 
+  // Estados simulados para módulos ainda não integrados
   const [triagens] = useState([
     { id: 1, tutor: 'Pedro Coltro', pet: 'Apollo', compatibilidade: '94%' },
     { id: 2, tutor: 'Lucas D\'Ávila', pet: 'Luna', compatibilidade: '45%' }
   ]);
 
+  // Estados para o formulário de cadastro de pet
   const [novoNome, setNovoNome] = useState('');
-  const [novaEspecie, setNovaEspecie] = useState('Cachorro');
+  const [novaEspecie, setNovaEspecie] = useState('Cão');
+  const [novaRaca, setNovaRaca] = useState('');
+  const [novoPorte, setNovoPorte] = useState('Médio');
   const [novaIdade, setNovaIdade] = useState('');
+  const [novoTemperamento, setNovoTemperamento] = useState('');
+
+  // Função para carregar a lista de animais diretamente da API
+  const carregarAnimaisDoServidor = async () => {
+    try {
+      setCarregando(true);
+      setErroMensagem('');
+      // Utilizando o objeto correto do seu service
+      const dados = await animalService.listarTodos();
+      setAnimais(dados);
+    } catch (err) {
+      setErroMensagem(err.message || 'Erro ao carregar a listagem de animais.');
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  // Carrega os dados assim que o painel monta em tela
+  useEffect(() => {
+    carregarAnimaisDoServidor();
+  }, []);
 
   const handleLogout = () => {
     sessionStorage.removeItem('@nima_token');
@@ -27,25 +53,55 @@ const OngDashboard = () => {
     navigate('/login');
   };
 
-  const cadastrarPet = (e) => {
+  // Envio de novo Pet para a API (RF11)
+  const cadastrarPet = async (e) => {
     e.preventDefault();
-    if (!novoNome || !novaIdade) return;
+    if (!novoNome || !novaIdade || !novaRaca || !novoTemperamento) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
 
-    const pet = {
-      id: Date.now(),
-      nome: novoNome,
-      especie: novaEspecie,
-      idade: novaIdade,
-      status: 'Disponível'
-    };
+    try {
+      setErroMensagem('');
+      
+      const novoAnimalPayload = {
+        nome: novoNome,
+        especie: novaEspecie, 
+        raca: novaRaca,
+        porte: novoPorte,
+        idade: novaIdade,
+        temperamento: novoTemperamento,
+        fotos: [],
+        ong_id: 1 
+      };
 
-    setAnimais([...animais, pet]);
-    setNovoNome('');
-    setNovaIdade('');
+      // Chamada usando o service importado corretamente
+      await animalService.cadastrar(novoAnimalPayload);
+      
+      // Reseta o formulário
+      setNovoNome('');
+      setNovaRaca('');
+      setNovaIdade('');
+      setNovoTemperamento('');
+      
+      await carregarAnimaisDoServidor();
+    } catch (err) {
+      setErroMensagem(err.message || 'Falha ao cadastrar pet.');
+    }
   };
 
-  const removerPet = (id) => {
-    setAnimais(animais.filter(item => item.id !== id));
+  // Remoção de Pet direto do banco
+  const removerPet = async (id) => {
+    if (!window.confirm('Tem certeza de que deseja remover este animal do ecossistema?')) return;
+
+    try {
+      setErroMensagem('');
+      // Chamada para remover o pet usando o método correto do service
+      await animalService.atualizarStatus(id, 'Adotado'); // Ou altere para rota de exclusão física se implementada
+      await carregarAnimaisDoServidor();
+    } catch (err) {
+      setErroMensagem(err.message || 'Erro ao remover o pet.');
+    }
   };
 
   return (
@@ -82,17 +138,33 @@ const OngDashboard = () => {
 
       {/* Área Operacional da ONG */}
       <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
-        <header style={{ marginBottom: '35px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#05082B', margin: '0 0 4px 0' }}>Painel da Instituição</h1>
-          <p style={{ color: '#6B7280', margin: 0, fontSize: '14px' }}>Gerencie animais sob sua tutela, verifique compatibilidade e controle cadastros locais.</p>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '35px' }}>
+          <div>
+            <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#05082B', margin: '0 0 4px 0' }}>Painel da Instituição</h1>
+            <p style={{ color: '#6B7280', margin: 0, fontSize: '14px' }}>Gerencie animais sob sua tutela, verifique compatibilidade e controle cadastros locais.</p>
+          </div>
+          <button 
+            onClick={carregarAnimaisDoServidor} 
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: '#4B5563' }}
+          >
+            <RefreshCw size={14} /> Atualizar Lista
+          </button>
         </header>
+
+        {erroMensagem && (
+          <div style={{ backgroundColor: '#FEE2E2', border: '1px solid #EF4444', color: '#B91C1C', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', fontSize: '14px', fontWeight: '500' }}>
+            ⚠️ {erroMensagem}
+          </div>
+        )}
 
         {/* Quadro Geral de Métricas Operacionais */}
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '35px' }}>
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
             <span style={{ fontSize: '14px', color: '#6B7280', fontWeight: '500' }}>Animais Sob Custódia</span>
-            <h3 style={{ fontSize: '24px', fontWeight: '700', color: '#05082B', margin: '8px 0 6px 0' }}>{animais.length} Animais</h3>
-            <span style={{ fontSize: '12px', color: '#1D5CFF', fontWeight: '600' }}>Disponíveis para Match</span>
+            <h3 style={{ fontSize: '24px', fontWeight: '700', color: '#05082B', margin: '8px 0 6px 0' }}>
+              {carregando ? '...' : animais.length} Animais
+            </h3>
+            <span style={{ fontSize: '12px', color: '#1D5CFF', fontWeight: '600' }}>Sincronizado com o Banco</span>
           </div>
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
             <span style={{ fontSize: '14px', color: '#6B7280', fontWeight: '500' }}>Triagens Pendentes</span>
@@ -109,12 +181,12 @@ const OngDashboard = () => {
         {/* Formulário e Tabela de Pets */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
           
-          {/* Cadastro Rápido de Pets */}
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+          {/* Cadastro Completo de Pets */}
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', height: 'fit-content' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#05082B', margin: '0 0 20px 0' }}>Cadastrar Novo Pet</h3>
-            <form onSubmit={cadastrarPet} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={cadastrarPet} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#6B7280', marginBottom: '6px' }}>Nome do Pet</label>
+                <label style={{ display: 'block', fontSize: '13px', color: '#4B5563', marginBottom: '6px', fontWeight: '500' }}>Nome do Pet *</label>
                 <input 
                   type="text" 
                   value={novoNome} 
@@ -124,72 +196,121 @@ const OngDashboard = () => {
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#6B7280', marginBottom: '6px' }}>Espécie</label>
-                <select 
-                  value={novaEspecie} 
-                  onChange={(e) => setNovaEspecie(e.target.value)}
-                  style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#F8FAFC', color: '#1F2937', border: '1px solid #E2E8F0', padding: '10px', borderRadius: '6px', cursor: 'pointer' }}
-                >
-                  <option value="Cachorro">Cachorro</option>
-                  <option value="Gato">Gato</option>
-                  <option value="Outro">Outro</option>
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#4B5563', marginBottom: '6px', fontWeight: '500' }}>Espécie *</label>
+                  <select 
+                    value={novaEspecie} 
+                    onChange={(e) => setNovaEspecie(e.target.value)}
+                    style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#F8FAFC', color: '#1F2937', border: '1px solid #E2E8F0', padding: '10px', borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    <option value="Cão">Cão</option>
+                    <option value="Gato">Gato</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', color: '#4B5563', marginBottom: '6px', fontWeight: '500' }}>Porte *</label>
+                  <select 
+                    value={novoPorte} 
+                    onChange={(e) => setNovoPorte(e.target.value)}
+                    style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#F8FAFC', color: '#1F2937', border: '1px solid #E2E8F0', padding: '10px', borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    <option value="Pequeno">Pequeno</option>
+                    <option value="Médio">Médio</option>
+                    <option value="Grande">Grande</option>
+                  </select>
+                </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', color: '#6B7280', marginBottom: '6px' }}>Idade Estimada</label>
+                <label style={{ display: 'block', fontSize: '13px', color: '#4B5563', marginBottom: '6px', fontWeight: '500' }}>Raça *</label>
                 <input 
                   type="text" 
-                  value={novaIdade} 
-                  onChange={(e) => setNovaIdade(e.target.value)}
-                  placeholder="Ex: 1 ano"
+                  value={novaRaca} 
+                  onChange={(e) => setNovaRaca(e.target.value)}
+                  placeholder="Ex: Vira-lata, Siamês"
                   style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#F8FAFC', color: '#1F2937', border: '1px solid #E2E8F0', padding: '10px', borderRadius: '6px' }}
                 />
               </div>
 
-              <button type="submit" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', backgroundColor: '#1D5CFF', color: '#FFF', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', marginTop: '10px' }}>
-                <Plus size={16} /> Adicionar Pet
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#4B5563', marginBottom: '6px', fontWeight: '500' }}>Idade Estimada *</label>
+                <input 
+                  type="text" 
+                  value={novaIdade} 
+                  onChange={(e) => setNovaIdade(e.target.value)}
+                  placeholder="Ex: 1 ano, 5 meses"
+                  style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#F8FAFC', color: '#1F2937', border: '1px solid #E2E8F0', padding: '10px', borderRadius: '6px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#4B5563', marginBottom: '6px', fontWeight: '500' }}>Temperamento *</label>
+                <textarea 
+                  value={novoTemperamento} 
+                  onChange={(e) => setNovoTemperamento(e.target.value)}
+                  placeholder="Ex: Muito calmo, brincalhão, se dá bem com crianças"
+                  rows={2}
+                  style={{ width: '100%', boxSizing: 'border-box', backgroundColor: '#F8FAFC', color: '#1F2937', border: '1px solid #E2E8F0', padding: '10px', borderRadius: '6px', fontFamily: 'inherit', resize: 'vertical' }}
+                />
+              </div>
+
+              <button type="submit" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%', padding: '12px', backgroundColor: '#1D5CFF', color: '#FFF', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', marginTop: '6px' }}>
+                <Plus size={16} /> Salvar no Sistema
               </button>
             </form>
           </div>
 
           {/* Listagem Geral de Animais Vinculados */}
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#05082B', margin: '0 0 20px 0' }}>Animais em Custódia Local</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #F1F5F9', color: '#6B7280', fontSize: '14px' }}>
-                  <th style={{ padding: '12px' }}>Nome</th>
-                  <th style={{ padding: '12px' }}>Espécie</th>
-                  <th style={{ padding: '12px' }}>Idade</th>
-                  <th style={{ padding: '12px' }}>Status</th>
-                  <th style={{ padding: '12px', textAlign: 'right' }}>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {animais.map((pet) => (
-                  <tr key={pet.id} style={{ borderBottom: '1px solid #F1F5F9', fontSize: '14px', color: '#1F2937' }}>
-                    <td style={{ padding: '16px 12px', fontWeight: '600', color: '#05082B' }}>{pet.nome}</td>
-                    <td style={{ padding: '16px 12px', color: '#6B7280' }}>{pet.especie}</td>
-                    <td style={{ padding: '16px 12px' }}>{pet.idade}</td>
-                    <td style={{ padding: '16px 12px' }}>
-                      <span style={{ color: pet.status === 'Disponível' ? '#10B981' : '#F59E0B', fontWeight: '600' }}>
-                        ● {pet.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: '16px 12px', textAlign: 'right' }}>
-                      <button 
-                        onClick={() => removerPet(pet.id)}
-                        style={{ backgroundColor: 'transparent', color: '#EF4444', border: 'none', cursor: 'pointer', padding: '4px' }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#05082B', margin: '0 0 20px 0' }}>Animais em Custódia Real</h3>
+            
+            {carregando ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: '#6B7280', fontSize: '14px', fontWeight: '500' }}>
+                Buscando registros na API...
+              </div>
+            ) : animais.length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: '#6B7280', fontSize: '14px' }}>
+                Nenhum animal cadastrado no banco de dados.
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #F1F5F9', color: '#6B7280', fontSize: '14px' }}>
+                    <th style={{ padding: '12px' }}>Nome</th>
+                    <th style={{ padding: '12px' }}>Espécie</th>
+                    <th style={{ padding: '12px' }}>Raça</th>
+                    <th style={{ padding: '12px' }}>Idade</th>
+                    <th style={{ padding: '12px' }}>Status</th>
+                    <th style={{ padding: '12px', textAlign: 'right' }}>Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {animais.map((pet) => (
+                    <tr key={pet.id} style={{ borderBottom: '1px solid #F1F5F9', fontSize: '14px', color: '#1F2937' }}>
+                      <td style={{ padding: '16px 12px', fontWeight: '600', color: '#05082B' }}>{pet.nome}</td>
+                      <td style={{ padding: '16px 12px', color: '#6B7280' }}>{pet.especie}</td>
+                      <td style={{ padding: '16px 12px', color: '#6B7280' }}>{pet.raca || 'N/A'}</td>
+                      <td style={{ padding: '16px 12px' }}>{pet.idade}</td>
+                      <td style={{ padding: '16px 12px' }}>
+                        <span style={{ color: pet.status_posse === 'Disponível' ? '#10B981' : '#F59E0B', fontWeight: '600' }}>
+                          ● {pet.status_posse || 'Disponível'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 12px', textAlign: 'right' }}>
+                        <button 
+                          onClick={() => removerPet(pet.id)}
+                          style={{ backgroundColor: 'transparent', color: '#EF4444', border: 'none', cursor: 'pointer', padding: '4px' }}
+                          title="Remover animal"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
         </div>
