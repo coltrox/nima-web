@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Routes, Route } from 'react-router-dom';
 import { Terminal, Users, ShieldAlert, Building2, LogOut } from 'lucide-react';
+import HomologarOngs from '../HomologarONG/homologarONG';
 
 const DevDashboard = () => {
   const navigate = useNavigate();
 
-  // Estado simulando os usuários cadastrados no banco para o gerenciamento de perfis
+  // 1. Estado dos Usuários
   const [usuarios, setUsuarios] = useState([
     { id: 1, nome: 'Desenvolvedor Master Nima', email: 'dev@nima.org', cpf: '00000000001', cargo: 'desenvolvedor', status: 'Ativo' },
     { id: 2, nome: 'ONG Patinhas Felizes', email: 'contato@patinhasfelizes.org', cpf: '00000000002', cargo: 'ong', status: 'Ativo' },
@@ -13,6 +14,7 @@ const DevDashboard = () => {
     { id: 4, nome: 'ONG Proteção Animal', email: 'admin@protecao.org', cpf: '00000000003', cargo: 'ong', status: 'Pendente' },
   ]);
 
+  // 2. Funções de Ação
   const handleLogout = () => {
     sessionStorage.removeItem('@nima_token');
     sessionStorage.removeItem('@nima_user_role');
@@ -32,46 +34,16 @@ const DevDashboard = () => {
     ));
   };
 
-  return (
-    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', backgroundColor: '#F8FAFC', color: '#1F2937' }}>
-      
-      {/* Sidebar de Governança Estilo Clara */}
-      <aside style={{ width: '260px', backgroundColor: '#FFFFFF', padding: '24px', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '35px' }}>
-            <Terminal size={24} style={{ color: '#1D5CFF' }} />
-            <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: '#05082B', letterSpacing: '0.5px' }}>nima<span style={{ color: '#1D5CFF' }}>.dev</span></h2>
-          </div>
-          
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px', background: '#F1F5F9', color: '#1D5CFF', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}>
-              <Users size={18} /> Controle de Perfis
-            </button>
-            <button style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px', background: 'transparent', color: '#4B5563', border: 'none', borderRadius: '8px', fontWeight: '500', cursor: 'pointer', textAlign: 'left' }}>
-              <Building2 size={18} /> Homologar ONGs
-            </button>
-            <button style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px', background: 'transparent', color: '#4B5563', border: 'none', borderRadius: '8px', fontWeight: '500', cursor: 'pointer', textAlign: 'left' }}>
-              <ShieldAlert size={18} /> Auditoria Geral
-            </button>
-          </nav>
-        </div>
-
-        <button 
-          onClick={handleLogout}
-          style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px', background: 'transparent', color: '#EF4444', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
-        >
-          <LogOut size={18} /> Sair do Sistema
-        </button>
-      </aside>
-
-      {/* Área de Gerenciamento Central */}
-      <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+  // 3. Sub-componente interno para renderizar a tabela original (Controle de Perfis)
+  const ControlePerfisConteudo = () => {
+    return (
+      <>
         <header style={{ marginBottom: '35px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#05082B', margin: '0 0 4px 0' }}>Gerenciamento do Sistema</h1>
           <p style={{ color: '#6B7280', margin: 0, fontSize: '14px' }}>Controle completo sobre credenciais, níveis de acesso corporativos e alteração de privilégios.</p>
         </header>
 
-        {/* Quadro Geral de Métricas de Perfis Claras */}
+        {/* Quadro Geral de Métricas */}
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '35px' }}>
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
             <span style={{ fontSize: '14px', color: '#6B7280', fontWeight: '500' }}>Total de Usuários</span>
@@ -94,7 +66,7 @@ const DevDashboard = () => {
           </div>
         </section>
 
-        {/* Tabela Clara de Gerenciamento de Usuários e Cargos */}
+        {/* Tabela Clara de Gerenciamento de Usuários */}
         <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#05082B', margin: '0 0 20px 0' }}>Lista de Contas Registradas</h3>
           
@@ -169,6 +141,58 @@ const DevDashboard = () => {
             </tbody>
           </table>
         </div>
+      </>
+    );
+  };
+
+  // 4. Renderização Estrutural do Dashboard Principal
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', backgroundColor: '#F8FAFC', color: '#1F2937' }}>
+      
+      {/* Sidebar de Governança Estilo Clara */}
+      <aside style={{ width: '260px', backgroundColor: '#FFFFFF', padding: '24px', borderRight: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '35px' }}>
+            <Terminal size={24} style={{ color: '#1D5CFF' }} />
+            <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: '#05082B', letterSpacing: '0.5px' }}>nima<span style={{ color: '#1D5CFF' }}>.dev</span></h2>
+          </div>
+          
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button 
+              onClick={() => navigate('/dev-dashboard')} 
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px', background: '#F1F5F9', color: '#1D5CFF', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <Users size={18} /> Controle de Perfis
+            </button>
+            <button 
+              onClick={() => navigate('/dev-dashboard/homologar')} 
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px', background: 'transparent', color: '#4B5563', border: 'none', borderRadius: '8px', fontWeight: '500', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <Building2 size={18} /> Homologar ONGs
+            </button>
+            <button style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px', background: 'transparent', color: '#4B5563', border: 'none', borderRadius: '8px', fontWeight: '500', cursor: 'pointer', textAlign: 'left' }}>
+              <ShieldAlert size={18} /> Auditoria Geral
+            </button>
+          </nav>
+        </div>
+
+        <button 
+          onClick={handleLogout}
+          style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px', background: 'transparent', color: '#EF4444', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
+        >
+          <LogOut size={18} /> Sair do Sistema
+        </button>
+      </aside>
+
+      {/* Área de Gerenciamento Central Dinâmica */}
+      <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+        <Routes>
+          {/* Rota raiz do painel /dev-dashboard */}
+          <Route path="/" element={<ControlePerfisConteudo />} />
+          
+          {/* Sub-rota interna para /dev-dashboard/homologar */}
+          <Route path="/homologar" element={<HomologarOngs />} />
+        </Routes>
       </main>
     </div>
   );
