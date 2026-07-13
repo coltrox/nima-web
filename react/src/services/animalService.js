@@ -1,7 +1,6 @@
 // src/services/animalService.js
 
-// Ajuste a URL base conforme o seu ambiente (ex: IP da máquina no Expo ou localhost no Web)
-const API_URL = 'http://localhost:3000/api';
+const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 /**
  * Auxiliar para recuperar o token de autenticação.

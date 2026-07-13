@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api/auth';
+const API_URL = `${import.meta.env.VITE_API_URL}/api/auth`;
 /**
  * Função interna baseada na fórmula do Módulo 11 para validação real de CPF.
  * Útil caso o painel possua fluxos de cadastro ou checagem de responsáveis técnicos.

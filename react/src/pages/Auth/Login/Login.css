@@ -14,23 +14,6 @@
   --error-bg: #FEF2F2;
 }
 
-html, body, #root {
-  margin: 0 !important;
-  padding: 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  height: 100vh !important;
-  min-height: 100vh !important;
-  overflow: hidden !important;
-  display: block !important;
-  position: relative !important;
-  left: 0 !important;
-  top: 0 !important;
-  box-sizing: border-box !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 *, *:before, *:after {
   box-sizing: inherit;
 }
