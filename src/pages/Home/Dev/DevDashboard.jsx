@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import { Terminal, Users, ShieldAlert, Building2, LogOut } from 'lucide-react';
 import HomologarOngs from '../HomologarONG/homologarONG';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const DevDashboard = () => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   // 1. Estado dos Usuários
   const [usuarios, setUsuarios] = useState([
@@ -16,9 +18,8 @@ const DevDashboard = () => {
 
   // 2. Funções de Ação
   const handleLogout = () => {
-    sessionStorage.removeItem('@nima_token');
-    sessionStorage.removeItem('@nima_user_role');
-    navigate('/login');
+    signOut();
+    navigate('/dev/login');
   };
 
   const alterarCargo = (id, novoCargo) => {
@@ -159,13 +160,13 @@ const DevDashboard = () => {
           
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <button 
-              onClick={() => navigate('/dev-dashboard')} 
+              onClick={() => navigate('/dev')} 
               style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px', background: '#F1F5F9', color: '#1D5CFF', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
             >
               <Users size={18} /> Controle de Perfis
             </button>
             <button 
-              onClick={() => navigate('/dev-dashboard/homologar')} 
+              onClick={() => navigate('/dev/homologar')} 
               style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '12px', background: 'transparent', color: '#4B5563', border: 'none', borderRadius: '8px', fontWeight: '500', cursor: 'pointer', textAlign: 'left' }}
             >
               <Building2 size={18} /> Homologar ONGs
@@ -187,10 +188,10 @@ const DevDashboard = () => {
       {/* Área de Gerenciamento Central Dinâmica */}
       <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
         <Routes>
-          {/* Rota raiz do painel /dev-dashboard */}
+          {/* Rota raiz do painel /dev */}
           <Route path="/" element={<ControlePerfisConteudo />} />
           
-          {/* Sub-rota interna para /dev-dashboard/homologar */}
+          {/* Sub-rota interna para /dev/homologar */}
           <Route path="/homologar" element={<HomologarOngs />} />
         </Routes>
       </main>

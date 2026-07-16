@@ -81,6 +81,19 @@ const authService = {
   },
 
   /**
+   * Cadastro self-service de ONG. A conta é criada 'pendente' e só loga após o dev homologar.
+   */
+  registerOng: async (dados) => {
+    try {
+      const response = await axios.post(`${API_URL}/register-ong`, dados);
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Erro ao enviar o cadastro da ONG.';
+      throw message;
+    }
+  },
+
+  /**
    * Solicita o envio do código de recuperação de credenciais institucionais.
    */
   forgotPassword: async (email) => {

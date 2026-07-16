@@ -583,8 +583,9 @@ export const IconBox = styled.div`
   height: 52px;
   border-radius: 16px;
   margin-bottom: 16px;
-  background: ${(p) => (p.$honey ? 'rgba(255, 194, 75, 0.24)' : 'var(--sky)')};
-  color: ${(p) => (p.$honey ? '#b3760a' : 'var(--blue)')};
+  background: ${(p) =>
+    p.$honey ? 'rgba(255, 194, 75, 0.24)' : p.$navy ? 'rgba(11, 30, 69, 0.1)' : 'var(--sky)'};
+  color: ${(p) => (p.$honey ? '#b3760a' : p.$navy ? 'var(--navy)' : 'var(--blue)')};
 `;
 
 /* ---------------------------------------------------------------- */
@@ -860,5 +861,283 @@ export const FooterBottom = styled.div`
   @media (max-width: 600px) {
     flex-direction: column;
     text-align: center;
+  }
+`;
+
+/* ---------------------------------------------------------------- */
+/* Marca (logo)                                                       */
+/* ---------------------------------------------------------------- */
+
+export const BrandImg = styled.img`
+  height: 30px;
+  width: auto;
+  display: block;
+`;
+
+export const FooterLogo = styled.img`
+  height: 30px;
+  width: auto;
+  display: block;
+  margin-bottom: 4px;
+`;
+
+/* ---------------------------------------------------------------- */
+/* O Desafio                                                          */
+/* ---------------------------------------------------------------- */
+
+export const Pains = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const StatBand = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const Stat = styled.div`
+  padding: 28px 24px;
+  border-radius: 20px;
+  background: var(--navy);
+  color: #fff;
+
+  strong {
+    display: block;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(34px, 5vw, 48px);
+    line-height: 1;
+    color: #fff;
+  }
+
+  span {
+    display: block;
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.75);
+  }
+`;
+
+/* ---------------------------------------------------------------- */
+/* Para ONGs — pilar central                                          */
+/* ---------------------------------------------------------------- */
+
+export const OngHead = styled.div`
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: 32px;
+  align-items: end;
+  margin-bottom: 36px;
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(28px, 3.4vw, 40px);
+    line-height: 1.12;
+    margin: 12px 0 14px;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.74);
+    margin: 0;
+  }
+
+  @media (max-width: 820px) {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+`;
+
+export const OngBenefits = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 820px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const OngBenefit = styled.li`
+  padding: 22px 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+
+  .ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 194, 75, 0.16);
+    color: var(--honey);
+    margin-bottom: 14px;
+  }
+
+  strong {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 6px;
+    color: #fff;
+  }
+
+  span {
+    display: block;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.7);
+  }
+`;
+
+/* ---------------------------------------------------------------- */
+/* Faixa "é um app" — a adoção acontece no celular                    */
+/* ---------------------------------------------------------------- */
+
+export const AppStrip = styled.div`
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 48px;
+  background: var(--ink);
+  border-radius: 28px;
+  color: #fff;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  align-items: center;
+  gap: 40px;
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(26px, 3vw, 36px);
+    line-height: 1.15;
+    margin: 12px 0 14px;
+
+    em {
+      font-style: normal;
+      color: var(--honey);
+    }
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.74);
+    margin: 0;
+  }
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+    padding: 40px 24px;
+    margin-inline: 20px;
+    width: auto;
+  }
+`;
+
+export const AppPhone = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+
+  .disc {
+    width: 132px;
+    height: 132px;
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--honey);
+  }
+`;
+
+export const AppBadges = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+`;
+
+export const AppBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+
+  span {
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.55);
+  }
+`;
+
+/* ---------------------------------------------------------------- */
+/* Origem do nome — ANIMA                                             */
+/* ---------------------------------------------------------------- */
+
+export const AnimaPanel = styled.div`
+  background: var(--navy);
+  color: #fff;
+  border-radius: 28px;
+  padding: 72px 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(28px, 3.6vw, 42px);
+    line-height: 1.14;
+    margin: 16px 0 14px;
+    color: #fff;
+  }
+
+  em {
+    font-style: normal;
+    color: var(--honey);
+  }
+
+  p {
+    font-size: 17px;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 640px;
+    margin: 0;
+  }
+
+  @media (max-width: 720px) {
+    padding: 48px 24px;
   }
 `;

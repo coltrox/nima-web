@@ -11,9 +11,10 @@
   --ink-soft: #5b6b84;    /* texto de apoio */
   --ink-line: rgba(12, 35, 64, 0.22);
   --line: rgba(12, 35, 64, 0.1);
-  --blue: #0b4fd1;        /* azul de ação */
-  --blue-deep: #001d4a;   /* azul do app mobile */
-  --blue-line: rgba(11, 79, 209, 0.22);
+  --blue: #0151c8;        /* azul do logo Nima — ação */
+  --blue-deep: #013fa0;   /* azul mais fundo — hover */
+  --blue-line: rgba(1, 81, 200, 0.22);
+  --navy: #0b1e45;        /* azul-marinho da patinha — acento */
   --sky: #e6efff;         /* azul claro de fundo de ícones */
   --honey: #ffc24b;       /* mel — destaque quente */
   --moss: #1f9d6b;        /* verde do score de afinidade */

@@ -1,174 +1,141 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { PawPrint, Loader2, Heart, ShieldCheck, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import authService from '../../../services/authService';
-import './Login.css';
+import { useNavigate, Link } from 'react-router-dom';
+import { Loader2, Mail, Lock, Eye, EyeOff, Check } from 'lucide-react';
+import { useAuth } from '../../../contexts/AuthContext';
+import * as A from '../authStyles';
 
-const LoginScreen = () => {
+const COPY = {
+  ong: {
+    title: 'Acesso da ONG',
+    subtitle: 'Entre no painel para gerenciar animais, candidaturas e campanhas.',
+    dest: '/ong/painel',
+    brandTitle: 'Bem-vinda de volta.',
+    points: [
+      'Triagem de adoções com IA',
+      'Vaquinhas e voluntariado',
+      'Seus animais no feed dos adotantes',
+    ],
+  },
+  desenvolvedor: {
+    title: 'Acesso do Desenvolvedor',
+    subtitle: 'Console de governança: homologação de ONGs e administração.',
+    dest: '/dev',
+    brandTitle: 'Console de governança.',
+    points: [
+      'Homologação de ONGs',
+      'Gestão de cargos e acessos',
+      'Auditoria do ecossistema',
+    ],
+  },
+};
+
+const LoginScreen = ({ role = 'ong' }) => {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
+  const copy = COPY[role] ?? COPY.ong;
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [erro, setErro] = useState('');
 
-  const handleLogin = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMessage('');
-    
+    setErro('');
     try {
-      const data = await authService.login(email, password);
-      
-      if (data.token) {
-        sessionStorage.setItem('@nima_token', data.token);
-      }
-      
-      // Armazena o cargo para controle de estado, se necessário
-      if (data.user?.cargo) {
-        sessionStorage.setItem('@nima_user_role', data.user.cargo);
-      }
-
-      // CORREÇÃO: Redirecionamento baseado nas novas regras de negócio e rotas de destino
-      if (data.user?.cargo === 'desenvolvedor') {
-        navigate('/dev-dashboard');
-      } else if (data.user?.cargo === 'ong') {
-        navigate('/ong-dashboard');
-      } else {
-        // Fallback preventivo caso seja um usuário comum sem painel estruturado
-        setErrorMessage('Este painel é restrito para Desenvolvedores e ONGs cadastradas.');
-      }
-
+      await signIn(email, password, role);
+      navigate(copy.dest);
     } catch (error) {
-      setErrorMessage(typeof error === 'string' ? error : 'Falha na autenticação corporativa. Verifique os dados e tente novamente.');
+      setErro(typeof error === 'string' ? error : 'Falha na autenticação. Verifique os dados.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-page-container">
-      <div className="background-blob blob-top" />
-      <div className="background-blob blob-bottom" />
-      
-      <div className="login-grid-layout">
-        {/* Lado Esquerdo: Banner Informativo voltado a Organizações e Governança */}
-        <div className="login-sidebar-banner">
-          <div className="sidebar-content-wrapper">
-            <div className="sidebar-logo-area">
-              <PawPrint size={38} className="sidebar-logo-icon" />
-              <span className="sidebar-logo-text">nima<span>.</span></span>
-            </div>
-            
-            <h2 className="sidebar-title">Painel de Controle e Governança do Ecossistema</h2>
-            <p className="sidebar-subtitle">
-              Módulo Central Web unificado para a triagem semântica de solicitações, homologação de ONGs parceiras e monitoramento estatístico.
-            </p>
-
-            <div className="sidebar-features-list">
-              <div className="sidebar-feature-item">
-                <div className="feature-icon-box pink-variant">
-                  <Heart size={22} />
-                </div>
-                <div className="feature-text-box">
-                  <h4>Triagem Semântica por IA</h4>
-                  <p>Relatórios gerados dinamicamente detalhando a viabilidade comportamental da adoção, mitigando as taxas de devolução.</p>
-                </div>
-              </div>
-
-              <div className="sidebar-feature-item">
-                <div className="feature-icon-box green-variant">
-                  <ShieldCheck size={22} />
-                </div>
-                <div className="feature-text-box">
-                  <h4>Console do Desenvolvedor & CLI</h4>
-                  <p>Área restrita para manutenção das regras de negócio do back-end, auditoria de logs e provisionamento de Smart Tags físicas.</p>
-                </div>
-              </div>
-            </div>
+    <A.Page>
+      <A.Shell>
+        <A.BrandSide>
+          <div>
+            <img src="/nima-logo-white.png" alt="Nima" />
+            <h2>{copy.brandTitle}</h2>
+            <p>Painel do ecossistema Nima — adoção com afinidade, do cadastro à homologação.</p>
           </div>
-          
-          <div className="sidebar-footer">
-            <p>© 2026 Nima Ecosystem. Painel Corporativo desenvolvido para Etec Bento Quirino.</p>
-          </div>
-        </div>
+          <A.BrandPoints>
+            {copy.points.map((p) => (
+              <li key={p}>
+                <Check size={16} strokeWidth={3} /> {p}
+              </li>
+            ))}
+          </A.BrandPoints>
+        </A.BrandSide>
 
-        {/* Lado Direito: Área de Formulário Restrito */}
-        <div className="login-form-area">
-          <div className="login-card-wrapper">
-            <header className="login-card-header">
-              <div className="login-logo-mobile">
-                <PawPrint size={32} className="login-logo-icon" />
-              </div>
-              <h1 className="login-header-title">Acesso Restrito</h1>
-              <p className="login-header-subtitle">Insira suas credenciais institucionais para acessar o painel de ONGs ou desenvolvedores.</p>
-            </header>
+        <A.FormSide>
+          <A.MobileBrand>
+            <img src="/nima-logo-trim.png" alt="Nima" />
+          </A.MobileBrand>
+          <A.Title>{copy.title}</A.Title>
+          <A.Subtitle>{copy.subtitle}</A.Subtitle>
 
-            <main className="login-content-area">
-              <form onSubmit={handleLogin} className="login-form">
-                
-                {errorMessage && (
-                  <div className="login-error-container">
-                    <p>{errorMessage}</p>
-                  </div>
-                )}
+          <A.Form onSubmit={submit}>
+            {erro && <A.ErrorBox>{erro}</A.ErrorBox>}
 
-                <div className="login-input-group">
-                  <label className="login-input-label">E-mail Corporativo ou Dev</label>
-                  <div className="login-input-field-wrapper">
-                    <Mail size={18} className="login-input-icon" />
-                    <input 
-                      type="email" 
-                      placeholder="nome.sobrenome@nima.org" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                      className="login-input"
-                      required
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
+            <A.Field>
+              <A.Label>E-mail</A.Label>
+              <A.InputWrap>
+                <Mail size={18} className="ic" />
+                <A.Input
+                  $icon
+                  type="email"
+                  placeholder="voce@exemplo.org"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </A.InputWrap>
+            </A.Field>
 
-                <div className="login-input-group">
-                  <label className="login-input-label">Senha Administrativa</label>
-                  <div className="login-input-field-wrapper">
-                    <Lock size={18} className="login-input-icon" />
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="••••••••" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      className="login-input"
-                      required
-                      disabled={loading}
-                    />
-                    <button 
-                      type="button" 
-                      className="login-toggle-password"
-                      onClick={() => setShowPassword(!showPassword)}
-                      disabled={loading}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-                
-                <button type="submit" className="login-action-button" disabled={loading}>
-                  {loading ? (
-                    <div className="login-loading-wrapper">
-                      <Loader2 className="animate-spin" size={20} />
-                      <span>Autenticando credenciais...</span>
-                    </div>
-                  ) : (
-                    "Autenticar no Sistema"
-                  )}
-                </button>
-              </form>
-            </main>
-          </div>
-        </div>
-      </div>
-    </div>
+            <A.Field>
+              <A.Label>Senha</A.Label>
+              <A.InputWrap>
+                <Lock size={18} className="ic" />
+                <A.Input
+                  $icon
+                  type={show ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                <A.Eye type="button" onClick={() => setShow(!show)} disabled={loading}>
+                  {show ? <EyeOff size={18} /> : <Eye size={18} />}
+                </A.Eye>
+              </A.InputWrap>
+            </A.Field>
+
+            <A.Button type="submit" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="spin" /> Autenticando...
+                </>
+              ) : (
+                'Entrar'
+              )}
+            </A.Button>
+
+            {role === 'ong' && (
+              <A.Foot>
+                Ainda não tem conta? <Link to="/ong/registro">Cadastre sua ONG</Link>
+              </A.Foot>
+            )}
+          </A.Form>
+        </A.FormSide>
+      </A.Shell>
+    </A.Page>
   );
 };
 
