@@ -31,6 +31,37 @@ export const animalService = {
         return await resposta.json();
     },
 
+    // Painel da ONG: apenas os animais da própria ONG (inclui adotados/desaparecidos)
+    async listarMinhas() {
+        const token = obterToken();
+        const resposta = await fetch(`${API_URL}/animais/minhas`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resposta.ok) {
+            const erro = await resposta.json();
+            throw new Error(erro.error || erro.message || 'Erro ao listar seus animais.');
+        }
+        return await resposta.json();
+    },
+
+    // Upload de uma foto do animal (multipart). Devolve o animal com a nova URL em fotos[].
+    async adicionarFoto(id, file) {
+        const token = obterToken();
+        const form = new FormData();
+        form.append('foto', file);
+        const resposta = await fetch(`${API_URL}/animais/${id}/fotos`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: form
+        });
+        if (!resposta.ok) {
+            const erro = await resposta.json();
+            throw new Error(erro.error || erro.message || 'Erro ao enviar a foto.');
+        }
+        return await resposta.json();
+    },
+
     // RF06 / RF20: Listar todos os animais (Feed / Mapa)
     async listarTodos() {
         const token = obterToken();
@@ -86,7 +117,7 @@ export const animalService = {
     // RF13: Vincular o ID de uma Smart Tag física ao pet
     async vincularSmartTag(id, smartTagId) {
         const token = obterToken();
-        const resposta = await fetch(`${API_URL}/animais/${id}/vincular-tag`, {
+        const resposta = await fetch(`${API_URL}/animais/${id}/smart-tag`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -107,7 +138,7 @@ export const animalService = {
     async atualizarStatus(id, novoStatus) {
         const token = obterToken();
         const resposta = await fetch(`${API_URL}/animais/${id}/status`, {
-            method: 'PATCH',
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
