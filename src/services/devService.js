@@ -44,6 +44,36 @@ const devService = {
       throw error.response?.data?.message || 'Erro ao atualizar ONG.';
     }
   },
+
+  // Visão geral do sistema (contagens reais para os cards do painel).
+  overview: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/overview`, authHeader());
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Erro ao carregar visão geral.';
+    }
+  },
+
+  // Lista todos os usuários. params: { cargo?, ativo?, busca? }
+  listarUsuarios: async (params = {}) => {
+    try {
+      const response = await axios.get(`${API_URL}/usuarios`, { params, ...authHeader() });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Erro ao listar usuários.';
+    }
+  },
+
+  // Suspende/reativa uma conta (qualquer cargo).
+  setUsuarioAtivo: async (id, ativo) => {
+    try {
+      const response = await axios.patch(`${API_URL}/usuarios/${id}/ativo`, { ativo }, authHeader());
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Erro ao atualizar usuário.';
+    }
+  },
 };
 
 export default devService;
