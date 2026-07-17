@@ -77,6 +77,20 @@ export const animalService = {
         return await resposta.json();
     },
 
+    // Exclui um animal (só o dono/ONG)
+    async remover(id) {
+        const token = obterToken();
+        const resposta = await fetch(`${API_URL}/animais/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!resposta.ok) {
+            const erro = await resposta.json();
+            throw new Error(erro.error || erro.message || 'Erro ao excluir o pet.');
+        }
+        return await resposta.json();
+    },
+
     // RF06 / RF20: Listar todos os animais (Feed / Mapa)
     async listarTodos() {
         const token = obterToken();

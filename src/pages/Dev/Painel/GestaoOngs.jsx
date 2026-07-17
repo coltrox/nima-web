@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Check, X, Pencil, Power, Building2, AtSign, Phone } from 'lucide-react';
+import { Check, X, Pencil, Power, Building2, AtSign, Phone, Nfc } from 'lucide-react';
 import devService from '../../../services/devService';
 import * as S from '../../Panel/panelStyles';
 
@@ -19,11 +19,17 @@ export default function GestaoOngs() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
-  const [modal, setModal] = useState(null); // 'rejeitar' | 'editar' | null
+  const [modal, setModal] = useState(null); // 'rejeitar' | 'editar' | 'patinhas' | null
   const [alvo, setAlvo] = useState(null);
   const [motivo, setMotivo] = useState('');
   const [edit, setEdit] = useState(editVazio);
   const [salvando, setSalvando] = useState(false);
+
+  // Geração de Patinhas em lote
+  const [tagsOng, setTagsOng] = useState([]);
+  const [qtd, setQtd] = useState(10);
+  const [prefixo, setPrefixo] = useState('NIMA-');
+  const [resultado, setResultado] = useState(null);
 
   const carregar = async () => {
     try {
@@ -88,7 +94,24 @@ export default function GestaoOngs() {
     } catch (e) { setErro(typeof e === 'string' ? e : 'Erro ao atualizar conta.'); }
   };
 
-  const fechar = () => { setModal(null); setAlvo(null); setMotivo(''); setEdit(editVazio); };
+  const abrirPatinhas = async (o) => {
+    setAlvo(o); setQtd(10); setPrefixo('NIMA-'); setResultado(null); setTagsOng([]); setModal('patinhas');
+    try { setTagsOng(await devService.listarTags(o.id)); } catch { /* ignore */ }
+  };
+
+  const gerar = async () => {
+    const n = parseInt(qtd, 10);
+    if (!Number.isInteger(n) || n < 1) { setErro('Quantidade inválida.'); return; }
+    try {
+      setSalvando(true); setErro('');
+      const r = await devService.criarTags(alvo.id, n, prefixo);
+      setResultado(r);
+      setTagsOng(await devService.listarTags(alvo.id));
+    } catch (e) { setErro(typeof e === 'string' ? e : 'Erro ao gerar Patinhas.'); }
+    finally { setSalvando(false); }
+  };
+
+  const fechar = () => { setModal(null); setAlvo(null); setMotivo(''); setEdit(editVazio); setResultado(null); setTagsOng([]); };
 
   return (
     <>
@@ -147,6 +170,7 @@ export default function GestaoOngs() {
                           <S.Btn $sm $variant="danger" onClick={() => abrirRejeitar(o)} title="Rejeitar"><X size={14} /></S.Btn>
                         )}
                         <S.Btn $sm $variant="ghost" onClick={() => abrirEditar(o)} title="Editar contato"><Pencil size={14} /></S.Btn>
+                        <S.Btn $sm $variant="subtle" onClick={() => abrirPatinhas(o)} title="Gerar Patinhas"><Nfc size={14} /></S.Btn>
                         <S.Btn $sm $variant="ghost" onClick={() => toggleAtiva(o)} title={o.ativo === false ? 'Reativar' : 'Suspender'}><Power size={14} /></S.Btn>
                       </div>
                     </td>
@@ -196,6 +220,41 @@ export default function GestaoOngs() {
                 <S.Btn type="submit" $variant="primary" disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar'}</S.Btn>
               </div>
             </form>
+          </S.ModalCard>
+        </S.Overlay>
+      )}
+
+      {/* MODAL gerar Patinhas */}
+      {modal === 'patinhas' && alvo && (
+        <S.Overlay onClick={fechar}>
+          <S.ModalCard onClick={(e) => e.stopPropagation()}>
+            <h3>Patinhas — {alvo.nome}</h3>
+            <p className="modal-sub">
+              Gera um lote de Patinhas pra esta ONG. Ela recebe já com o código e só relaciona aos pets.
+              {' '}Hoje: <strong>{tagsOng.length}</strong> no total · <strong>{tagsOng.filter((t) => !t.animal_id).length}</strong> livres.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <S.Field>Quantidade
+                <S.Input type="number" min="1" max="200" value={qtd} onChange={(e) => setQtd(e.target.value)} />
+              </S.Field>
+              <S.Field>Prefixo
+                <S.Input value={prefixo} onChange={(e) => setPrefixo(e.target.value)} placeholder="NIMA-" />
+              </S.Field>
+            </div>
+
+            {resultado && (
+              <div style={{ background: 'rgba(31,157,107,0.1)', border: '1px solid rgba(31,157,107,0.3)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
+                <strong style={{ color: 'var(--moss)' }}>{resultado.criadas} Patinha(s) gerada(s):</strong>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12.5, marginTop: 6, color: 'var(--ink)', display: 'flex', flexWrap: 'wrap', gap: '4px 10px' }}>
+                  {(resultado.tags || []).map((t) => <span key={t.id}>{t.codigo}</span>)}
+                </div>
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <S.Btn type="button" $variant="ghost" onClick={fechar}>Fechar</S.Btn>
+              <S.Btn type="button" $variant="primary" disabled={salvando} onClick={gerar}>{salvando ? 'Gerando…' : 'Gerar Patinhas'}</S.Btn>
+            </div>
           </S.ModalCard>
         </S.Overlay>
       )}

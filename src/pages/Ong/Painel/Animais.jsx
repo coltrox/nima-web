@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Syringe, Nfc, RefreshCw, PawPrint, UserRound } from 'lucide-react';
+import { Plus, Syringe, Nfc, RefreshCw, PawPrint, UserRound, Trash2 } from 'lucide-react';
 import { animalService } from '../../../services/animalService';
 import { tagsService } from '../../../services/tagsService';
 import * as S from '../../Panel/panelStyles';
@@ -23,7 +23,6 @@ export default function Animais() {
   const [donoForm, setDonoForm] = useState(donoVazio);
   const [tagsLivres, setTagsLivres] = useState([]);
   const [tagSel, setTagSel] = useState('');   // id de uma tag livre
-  const [novoCodigo, setNovoCodigo] = useState(''); // ou cria uma nova
   const [salvando, setSalvando] = useState(false);
 
   const carregar = async () => {
@@ -40,7 +39,7 @@ export default function Animais() {
 
   useEffect(() => { carregar(); }, []);
 
-  const fecharModal = () => { setModal(null); setForm(formVazio); setFoto(null); setAlvo(null); setCampo(''); setDonoForm(donoVazio); setTagSel(''); setNovoCodigo(''); };
+  const fecharModal = () => { setModal(null); setForm(formVazio); setFoto(null); setAlvo(null); setCampo(''); setDonoForm(donoVazio); setTagSel(''); };
 
   const cadastrar = async (e) => {
     e.preventDefault();
@@ -74,7 +73,7 @@ export default function Animais() {
 
   const abrirVacinas = (a) => { setAlvo(a); setCampo(a.prontuario_vacinas || ''); setModal('vacinas'); };
   const abrirTag = async (a) => {
-    setAlvo(a); setTagSel(''); setNovoCodigo(''); setModal('tag');
+    setAlvo(a); setTagSel(''); setModal('tag');
     try {
       const todas = await tagsService.listarMinhas();
       setTagsLivres(todas.filter((t) => !t.animal_id));
@@ -95,22 +94,27 @@ export default function Animais() {
   };
 
   const salvarTag = async () => {
+    if (!tagSel) { setErro('Escolha uma Patinha livre.'); return; }
     try {
       setSalvando(true);
       setErro('');
-      let tagId = tagSel;
-      // Se digitou um código novo, cria a Patinha antes de vincular.
-      if (!tagId && novoCodigo.trim()) {
-        const nova = await tagsService.criar(novoCodigo.trim());
-        tagId = nova.id;
-      }
-      if (!tagId) { setErro('Escolha uma Patinha livre ou digite um código novo.'); return; }
-      await tagsService.vincular(tagId, alvo.id);
+      await tagsService.vincular(tagSel, alvo.id);
       fecharModal();
       await carregar();
     } catch (e) {
       setErro(e.message || 'Erro ao vincular a Patinha.');
     } finally { setSalvando(false); }
+  };
+
+  const excluir = async (a) => {
+    if (!window.confirm(`Excluir o pet "${a.nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      setErro('');
+      await animalService.remover(a.id);
+      await carregar();
+    } catch (e) {
+      setErro(e.message || 'Erro ao excluir o pet.');
+    }
   };
 
   const abrirDono = (a) => { setAlvo(a); setDonoForm({ dono_nome: a.dono_nome || '', dono_telefone: a.dono_telefone || '', dono_whatsapp: a.dono_whatsapp || '' }); setModal('dono'); };
@@ -192,6 +196,7 @@ export default function Animais() {
                         <S.Btn $variant="ghost" $sm onClick={() => abrirVacinas(a)} title="Prontuário de vacinas"><Syringe size={15} /></S.Btn>
                         <S.Btn $variant="ghost" $sm onClick={() => abrirTag(a)} title="Vincular Patinha (Smart Tag)"><Nfc size={15} /></S.Btn>
                         <S.Btn $variant="ghost" $sm onClick={() => abrirDono(a)} title="Contato do dono/tutor"><UserRound size={15} /></S.Btn>
+                        <S.Btn $variant="danger" $sm onClick={() => excluir(a)} title="Excluir pet"><Trash2 size={15} /></S.Btn>
                       </div>
                     </td>
                   </tr>
@@ -287,24 +292,26 @@ export default function Animais() {
         <S.Overlay onClick={fecharModal}>
           <S.ModalCard onClick={(e) => e.stopPropagation()}>
             <h3>Vincular Patinha</h3>
-            <p className="modal-sub">{alvo.nome} — escolha uma Patinha livre ou crie uma nova.</p>
+            <p className="modal-sub">{alvo.nome} — escolha uma das Patinhas livres que a Nima enviou pra sua ONG.</p>
             {alvo.smart_tag_id && (
               <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: -6, marginBottom: 14 }}>
                 Patinha atual: <strong style={{ color: 'var(--ink)' }}>{alvo.smart_tag_id}</strong>
               </p>
             )}
             <S.Field>Patinha livre
-              <S.Select value={tagSel} onChange={(e) => { setTagSel(e.target.value); setNovoCodigo(''); }} disabled={!!novoCodigo.trim()}>
+              <S.Select value={tagSel} onChange={(e) => setTagSel(e.target.value)}>
                 <option value="">{tagsLivres.length ? 'Selecione…' : 'Nenhuma Patinha livre'}</option>
                 {tagsLivres.map((t) => <option key={t.id} value={t.id}>{t.codigo}</option>)}
               </S.Select>
             </S.Field>
-            <S.Field>ou crie uma nova
-              <S.Input value={novoCodigo} onChange={(e) => { setNovoCodigo(e.target.value); setTagSel(''); }} placeholder="Ex: NIMA-0005" />
-            </S.Field>
+            {tagsLivres.length === 0 && (
+              <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>
+                Nenhuma Patinha livre no momento. As Patinhas são enviadas pela Nima — fale com a administração ou solte uma que já esteja vinculada.
+              </p>
+            )}
             <div className="modal-actions">
               <S.Btn type="button" $variant="ghost" onClick={fecharModal}>Cancelar</S.Btn>
-              <S.Btn type="button" $variant="primary" disabled={salvando || (!tagSel && !novoCodigo.trim())} onClick={salvarTag}>{salvando ? 'Salvando…' : 'Vincular'}</S.Btn>
+              <S.Btn type="button" $variant="primary" disabled={salvando || !tagSel} onClick={salvarTag}>{salvando ? 'Salvando…' : 'Vincular'}</S.Btn>
             </div>
           </S.ModalCard>
         </S.Overlay>

@@ -74,6 +74,36 @@ const devService = {
       throw error.response?.data?.message || 'Erro ao atualizar usuário.';
     }
   },
+
+  // Gera um lote de Patinhas para uma ONG (o dev fabrica; a ONG só relaciona).
+  criarTags: async (ong_id, quantidade, prefixo) => {
+    try {
+      const response = await axios.post(`${API_URL}/tags`, { ong_id, quantidade, prefixo }, authHeader());
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Erro ao gerar Patinhas.';
+    }
+  },
+
+  // Lista Patinhas (todas ou de uma ONG via ?ong_id).
+  listarTags: async (ong_id) => {
+    try {
+      const response = await axios.get(`${API_URL}/tags`, { params: ong_id ? { ong_id } : {}, ...authHeader() });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Erro ao listar Patinhas.';
+    }
+  },
+
+  // Remove uma Patinha do estoque.
+  removerTag: async (id) => {
+    try {
+      const response = await axios.delete(`${API_URL}/tags/${id}`, authHeader());
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Erro ao remover Patinha.';
+    }
+  },
 };
 
 export default devService;

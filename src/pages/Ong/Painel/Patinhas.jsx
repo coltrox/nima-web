@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Nfc, Link2, Unlink, Trash2, Copy, Check } from 'lucide-react';
+import { Nfc, Link2, Unlink, Copy, Check } from 'lucide-react';
 import { tagsService } from '../../../services/tagsService';
 import { animalService } from '../../../services/animalService';
 import * as S from '../../Panel/panelStyles';
@@ -12,8 +12,7 @@ export default function Patinhas() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
-  const [modal, setModal] = useState(null); // 'nova' | 'vincular' | null
-  const [codigo, setCodigo] = useState('');
+  const [modal, setModal] = useState(null); // 'vincular' | null
   const [alvo, setAlvo] = useState(null); // tag selecionada p/ vincular
   const [animalSel, setAnimalSel] = useState('');
   const [salvando, setSalvando] = useState(false);
@@ -35,20 +34,7 @@ export default function Patinhas() {
 
   useEffect(() => { carregar(); }, []);
 
-  const fechar = () => { setModal(null); setCodigo(''); setAlvo(null); setAnimalSel(''); };
-
-  const criar = async (e) => {
-    e.preventDefault();
-    if (!codigo.trim()) { setErro('Informe o código da Patinha.'); return; }
-    try {
-      setSalvando(true);
-      setErro('');
-      await tagsService.criar(codigo.trim());
-      fechar();
-      await carregar();
-    } catch (e) { setErro(e.message || 'Erro ao criar Patinha.'); }
-    finally { setSalvando(false); }
-  };
+  const fechar = () => { setModal(null); setAlvo(null); setAnimalSel(''); };
 
   const abrirVincular = (t) => { setAlvo(t); setAnimalSel(''); setModal('vincular'); };
 
@@ -70,12 +56,6 @@ export default function Patinhas() {
     catch (e) { setErro(e.message || 'Erro ao desvincular.'); }
   };
 
-  const remover = async (t) => {
-    if (!window.confirm(`Remover a Patinha ${t.codigo} do registro?`)) return;
-    try { setErro(''); await tagsService.remover(t.id); await carregar(); }
-    catch (e) { setErro(e.message || 'Erro ao remover.'); }
-  };
-
   const copiar = async (t) => {
     try { await navigator.clipboard.writeText(`https://${BASE_URL}${t.codigo}`); setCopiado(t.id); setTimeout(() => setCopiado(null), 1600); } catch { /* */ }
   };
@@ -85,9 +65,8 @@ export default function Patinhas() {
       <S.PageHead>
         <div>
           <h1>Patinhas</h1>
-          <p>Suas Smart Tags antiperda. Crie o código, vincule a um pet e imprima o QR da URL abaixo.</p>
+          <p>Suas Smart Tags antiperda chegam prontas da Nima (já com o código). Aqui você só relaciona cada uma a um pet — e imprime o QR da URL.</p>
         </div>
-        <S.Btn $variant="primary" onClick={() => setModal('nova')}><Plus size={17} /> Nova Patinha</S.Btn>
       </S.PageHead>
 
       {erro && <S.Alert>⚠️ {erro}</S.Alert>}
@@ -96,7 +75,7 @@ export default function Patinhas() {
         {carregando ? (
           <S.Spinner $center />
         ) : tags.length === 0 ? (
-          <S.Empty style={{ border: 'none' }}><Nfc size={30} style={{ opacity: 0.4 }} /><br />Nenhuma Patinha ainda. Crie a primeira.</S.Empty>
+          <S.Empty style={{ border: 'none' }}><Nfc size={30} style={{ opacity: 0.4 }} /><br />Nenhuma Patinha ainda. Elas são enviadas pela Nima — fale com a administração.</S.Empty>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <S.Table>
@@ -126,9 +105,8 @@ export default function Patinhas() {
                     <td>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                         {t.animal
-                          ? <S.Btn $variant="ghost" $sm onClick={() => desvincular(t)} title="Desvincular"><Unlink size={14} /></S.Btn>
-                          : <S.Btn $variant="subtle" $sm onClick={() => abrirVincular(t)}><Link2 size={14} /> Vincular</S.Btn>}
-                        <S.Btn $variant="ghost" $sm onClick={() => remover(t)} title="Remover"><Trash2 size={14} /></S.Btn>
+                          ? <S.Btn $variant="ghost" $sm onClick={() => desvincular(t)} title="Desvincular"><Unlink size={14} /> Tirar</S.Btn>
+                          : <S.Btn $variant="subtle" $sm onClick={() => abrirVincular(t)}><Link2 size={14} /> Relacionar</S.Btn>}
                       </div>
                     </td>
                   </tr>
@@ -138,25 +116,6 @@ export default function Patinhas() {
           </div>
         )}
       </S.Card>
-
-      {/* MODAL: nova Patinha */}
-      {modal === 'nova' && (
-        <S.Overlay onClick={fechar}>
-          <S.ModalCard onClick={(e) => e.stopPropagation()}>
-            <h3>Nova Patinha</h3>
-            <p className="modal-sub">O código vai na URL (ex.: NIMA-0001). Depois você imprime o QR e cola na coleira.</p>
-            <form onSubmit={criar}>
-              <S.Field>Código
-                <S.Input value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="NIMA-0001" />
-              </S.Field>
-              <div className="modal-actions">
-                <S.Btn type="button" $variant="ghost" onClick={fechar}>Cancelar</S.Btn>
-                <S.Btn type="submit" $variant="primary" disabled={salvando}>{salvando ? 'Criando…' : 'Criar'}</S.Btn>
-              </div>
-            </form>
-          </S.ModalCard>
-        </S.Overlay>
-      )}
 
       {/* MODAL: vincular a um pet */}
       {modal === 'vincular' && alvo && (

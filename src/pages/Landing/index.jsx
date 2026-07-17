@@ -438,12 +438,14 @@ export default function Landing() {
       {/* --------------------------- PATINHA (SMART TAG) --------------------------- */}
       <S.Section id="tag">
         <S.TagShowcase as="div">
-          <S.TagDisc onMouseEnter={playTag} onMouseLeave={pauseTag}>
+          <S.TagDisc>
             {videoOk ? (
               <video
                 ref={videoRef}
                 src="/chaveiro.mp4"
                 preload="auto"
+                autoPlay
+                loop
                 muted
                 playsInline
                 onError={() => setVideoOk(false)}
@@ -488,6 +490,14 @@ export default function Landing() {
                 <span>
                   <strong>Ficha pública completa:</strong> abre na hora o perfil do pet com nome,
                   contato do tutor e a carteira de vacinação digital.
+                </span>
+              </li>
+              <li>
+                <Check size={18} strokeWidth={3} />
+                <span>
+                  <strong>Compra em lote para ONGs:</strong> a ONG adquire Patinhas em quantidade
+                  para os seus pets — e ainda pode repassá-las a quem adota, virando uma nova fonte
+                  de renda para a causa.
                 </span>
               </li>
             </S.TagPoints>
