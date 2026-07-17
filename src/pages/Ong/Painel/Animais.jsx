@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Syringe, Nfc, RefreshCw, PawPrint, UserRound } from 'lucide-react';
 import { animalService } from '../../../services/animalService';
+import { tagsService } from '../../../services/tagsService';
 import * as S from '../../Panel/panelStyles';
 
 const STATUS_TONE = { 'Disponível': 'green', 'Adotado': 'blue', 'Desaparecido': 'amber' };
@@ -20,6 +21,9 @@ export default function Animais() {
   const [alvo, setAlvo] = useState(null); // animal selecionado p/ vacinas/tag/dono
   const [campo, setCampo] = useState(''); // valor do textarea/input do modal
   const [donoForm, setDonoForm] = useState(donoVazio);
+  const [tagsLivres, setTagsLivres] = useState([]);
+  const [tagSel, setTagSel] = useState('');   // id de uma tag livre
+  const [novoCodigo, setNovoCodigo] = useState(''); // ou cria uma nova
   const [salvando, setSalvando] = useState(false);
 
   const carregar = async () => {
@@ -36,7 +40,7 @@ export default function Animais() {
 
   useEffect(() => { carregar(); }, []);
 
-  const fecharModal = () => { setModal(null); setForm(formVazio); setFoto(null); setAlvo(null); setCampo(''); setDonoForm(donoVazio); };
+  const fecharModal = () => { setModal(null); setForm(formVazio); setFoto(null); setAlvo(null); setCampo(''); setDonoForm(donoVazio); setTagSel(''); setNovoCodigo(''); };
 
   const cadastrar = async (e) => {
     e.preventDefault();
@@ -69,7 +73,15 @@ export default function Animais() {
   };
 
   const abrirVacinas = (a) => { setAlvo(a); setCampo(a.prontuario_vacinas || ''); setModal('vacinas'); };
-  const abrirTag = (a) => { setAlvo(a); setCampo(a.smart_tag_id || ''); setModal('tag'); };
+  const abrirTag = async (a) => {
+    setAlvo(a); setTagSel(''); setNovoCodigo(''); setModal('tag');
+    try {
+      const todas = await tagsService.listarMinhas();
+      setTagsLivres(todas.filter((t) => !t.animal_id));
+    } catch (e) {
+      setErro(e.message || 'Erro ao carregar Patinhas livres.');
+    }
+  };
 
   const salvarVacinas = async () => {
     try {
@@ -85,7 +97,15 @@ export default function Animais() {
   const salvarTag = async () => {
     try {
       setSalvando(true);
-      await animalService.vincularSmartTag(alvo.id, campo.trim());
+      setErro('');
+      let tagId = tagSel;
+      // Se digitou um código novo, cria a Patinha antes de vincular.
+      if (!tagId && novoCodigo.trim()) {
+        const nova = await tagsService.criar(novoCodigo.trim());
+        tagId = nova.id;
+      }
+      if (!tagId) { setErro('Escolha uma Patinha livre ou digite um código novo.'); return; }
+      await tagsService.vincular(tagId, alvo.id);
       fecharModal();
       await carregar();
     } catch (e) {
@@ -267,13 +287,24 @@ export default function Animais() {
         <S.Overlay onClick={fecharModal}>
           <S.ModalCard onClick={(e) => e.stopPropagation()}>
             <h3>Vincular Patinha</h3>
-            <p className="modal-sub">{alvo.nome} — ID da Smart Tag antiperda.</p>
-            <S.Field>ID da Patinha
-              <S.Input value={campo} onChange={(e) => setCampo(e.target.value)} placeholder="Ex: NIMA-TAG-000123" />
+            <p className="modal-sub">{alvo.nome} — escolha uma Patinha livre ou crie uma nova.</p>
+            {alvo.smart_tag_id && (
+              <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: -6, marginBottom: 14 }}>
+                Patinha atual: <strong style={{ color: 'var(--ink)' }}>{alvo.smart_tag_id}</strong>
+              </p>
+            )}
+            <S.Field>Patinha livre
+              <S.Select value={tagSel} onChange={(e) => { setTagSel(e.target.value); setNovoCodigo(''); }} disabled={!!novoCodigo.trim()}>
+                <option value="">{tagsLivres.length ? 'Selecione…' : 'Nenhuma Patinha livre'}</option>
+                {tagsLivres.map((t) => <option key={t.id} value={t.id}>{t.codigo}</option>)}
+              </S.Select>
+            </S.Field>
+            <S.Field>ou crie uma nova
+              <S.Input value={novoCodigo} onChange={(e) => { setNovoCodigo(e.target.value); setTagSel(''); }} placeholder="Ex: NIMA-0005" />
             </S.Field>
             <div className="modal-actions">
               <S.Btn type="button" $variant="ghost" onClick={fecharModal}>Cancelar</S.Btn>
-              <S.Btn type="button" $variant="primary" disabled={salvando || !campo.trim()} onClick={salvarTag}>{salvando ? 'Salvando…' : 'Vincular'}</S.Btn>
+              <S.Btn type="button" $variant="primary" disabled={salvando || (!tagSel && !novoCodigo.trim())} onClick={salvarTag}>{salvando ? 'Salvando…' : 'Vincular'}</S.Btn>
             </div>
           </S.ModalCard>
         </S.Overlay>
