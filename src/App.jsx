@@ -7,7 +7,7 @@ import ParaOngs from './pages/Ong/ParaOngs/index.jsx';
 import LoginScreen from './pages/Auth/Login/index.jsx';
 import OngRegister from './pages/Auth/OngRegister/index.jsx';
 import DevDashboard from './pages/Home/Dev/DevDashboard.jsx';
-import OngDashboard from './pages/Home/Ong/OngDashboard.jsx';
+import OngPainel from './pages/Ong/Painel/OngPainel.jsx';
 
 function App() {
   return (
@@ -30,7 +30,7 @@ function App() {
             path="/ong/painel/*"
             element={
               <ProtectedRoute role="ong" loginPath="/ong/login">
-                <OngDashboard />
+                <OngPainel />
               </ProtectedRoute>
             }
           />
