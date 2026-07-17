@@ -62,6 +62,21 @@ export const animalService = {
         return await resposta.json();
     },
 
+    // Contato do dono/tutor (para a ficha pública antiperda)
+    async atualizarDono(id, dono) {
+        const token = obterToken();
+        const resposta = await fetch(`${API_URL}/animais/${id}/dono`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(dono)
+        });
+        if (!resposta.ok) {
+            const erro = await resposta.json();
+            throw new Error(erro.error || erro.message || 'Erro ao salvar o contato do dono.');
+        }
+        return await resposta.json();
+    },
+
     // RF06 / RF20: Listar todos os animais (Feed / Mapa)
     async listarTodos() {
         const token = obterToken();

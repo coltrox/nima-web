@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Syringe, Nfc, RefreshCw, PawPrint } from 'lucide-react';
+import { Plus, Syringe, Nfc, RefreshCw, PawPrint, UserRound } from 'lucide-react';
 import { animalService } from '../../../services/animalService';
 import * as S from '../../Panel/panelStyles';
 
 const STATUS_TONE = { 'Disponível': 'green', 'Adotado': 'blue', 'Desaparecido': 'amber' };
 const STATUS_OPS = ['Disponível', 'Adotado', 'Desaparecido'];
 
-const formVazio = { nome: '', especie: 'Cão', raca: '', porte: 'Médio', idade: '', temperamento: '' };
+const formVazio = { nome: '', especie: 'Cão', raca: '', porte: 'Médio', idade: '', temperamento: '', dono_nome: '', dono_telefone: '', dono_whatsapp: '' };
+const donoVazio = { dono_nome: '', dono_telefone: '', dono_whatsapp: '' };
 
 export default function Animais() {
   const [animais, setAnimais] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
-  const [modal, setModal] = useState(null); // 'novo' | 'vacinas' | 'tag' | null
+  const [modal, setModal] = useState(null); // 'novo' | 'vacinas' | 'tag' | 'dono' | null
   const [form, setForm] = useState(formVazio);
   const [foto, setFoto] = useState(null);
-  const [alvo, setAlvo] = useState(null); // animal selecionado p/ vacinas/tag
+  const [alvo, setAlvo] = useState(null); // animal selecionado p/ vacinas/tag/dono
   const [campo, setCampo] = useState(''); // valor do textarea/input do modal
+  const [donoForm, setDonoForm] = useState(donoVazio);
   const [salvando, setSalvando] = useState(false);
 
   const carregar = async () => {
@@ -34,7 +36,7 @@ export default function Animais() {
 
   useEffect(() => { carregar(); }, []);
 
-  const fecharModal = () => { setModal(null); setForm(formVazio); setFoto(null); setAlvo(null); setCampo(''); };
+  const fecharModal = () => { setModal(null); setForm(formVazio); setFoto(null); setAlvo(null); setCampo(''); setDonoForm(donoVazio); };
 
   const cadastrar = async (e) => {
     e.preventDefault();
@@ -88,6 +90,19 @@ export default function Animais() {
       await carregar();
     } catch (e) {
       setErro(e.message || 'Erro ao vincular a Patinha.');
+    } finally { setSalvando(false); }
+  };
+
+  const abrirDono = (a) => { setAlvo(a); setDonoForm({ dono_nome: a.dono_nome || '', dono_telefone: a.dono_telefone || '', dono_whatsapp: a.dono_whatsapp || '' }); setModal('dono'); };
+
+  const salvarDono = async () => {
+    try {
+      setSalvando(true);
+      await animalService.atualizarDono(alvo.id, donoForm);
+      fecharModal();
+      await carregar();
+    } catch (e) {
+      setErro(e.message || 'Erro ao salvar o contato do dono.');
     } finally { setSalvando(false); }
   };
 
@@ -156,6 +171,7 @@ export default function Animais() {
                         </S.Select>
                         <S.Btn $variant="ghost" $sm onClick={() => abrirVacinas(a)} title="Prontuário de vacinas"><Syringe size={15} /></S.Btn>
                         <S.Btn $variant="ghost" $sm onClick={() => abrirTag(a)} title="Vincular Patinha (Smart Tag)"><Nfc size={15} /></S.Btn>
+                        <S.Btn $variant="ghost" $sm onClick={() => abrirDono(a)} title="Contato do dono/tutor"><UserRound size={15} /></S.Btn>
                       </div>
                     </td>
                   </tr>
@@ -202,6 +218,24 @@ export default function Animais() {
               <S.Field>Foto (opcional)
                 <S.Input type="file" accept="image/*" onChange={(e) => setFoto(e.target.files?.[0] || null)} />
               </S.Field>
+
+              <div style={{ borderTop: '1px solid var(--line)', margin: '4px 0 14px', paddingTop: 14 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 10 }}>
+                  Contato do dono/tutor (opcional — aparece na Patinha antiperda)
+                </div>
+                <S.Field>Nome do tutor
+                  <S.Input value={form.dono_nome} onChange={(e) => setForm({ ...form, dono_nome: e.target.value })} placeholder="Ex: Maria Silva" />
+                </S.Field>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <S.Field>Telefone
+                    <S.Input value={form.dono_telefone} onChange={(e) => setForm({ ...form, dono_telefone: e.target.value })} placeholder="(19) 90000-0000" />
+                  </S.Field>
+                  <S.Field>WhatsApp
+                    <S.Input value={form.dono_whatsapp} onChange={(e) => setForm({ ...form, dono_whatsapp: e.target.value })} placeholder="(19) 90000-0000" />
+                  </S.Field>
+                </div>
+              </div>
+
               <div className="modal-actions">
                 <S.Btn type="button" $variant="ghost" onClick={fecharModal}>Cancelar</S.Btn>
                 <S.Btn type="submit" $variant="primary" disabled={salvando}>{salvando ? 'Salvando…' : 'Cadastrar'}</S.Btn>
@@ -240,6 +274,31 @@ export default function Animais() {
             <div className="modal-actions">
               <S.Btn type="button" $variant="ghost" onClick={fecharModal}>Cancelar</S.Btn>
               <S.Btn type="button" $variant="primary" disabled={salvando || !campo.trim()} onClick={salvarTag}>{salvando ? 'Salvando…' : 'Vincular'}</S.Btn>
+            </div>
+          </S.ModalCard>
+        </S.Overlay>
+      )}
+
+      {/* MODAL: contato do dono/tutor */}
+      {modal === 'dono' && alvo && (
+        <S.Overlay onClick={fecharModal}>
+          <S.ModalCard onClick={(e) => e.stopPropagation()}>
+            <h3>Contato do dono</h3>
+            <p className="modal-sub">{alvo.nome} — aparece na Patinha antiperda (tem prioridade sobre o contato da ONG).</p>
+            <S.Field>Nome do tutor
+              <S.Input value={donoForm.dono_nome} onChange={(e) => setDonoForm({ ...donoForm, dono_nome: e.target.value })} placeholder="Ex: Maria Silva" />
+            </S.Field>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <S.Field>Telefone
+                <S.Input value={donoForm.dono_telefone} onChange={(e) => setDonoForm({ ...donoForm, dono_telefone: e.target.value })} placeholder="(19) 90000-0000" />
+              </S.Field>
+              <S.Field>WhatsApp
+                <S.Input value={donoForm.dono_whatsapp} onChange={(e) => setDonoForm({ ...donoForm, dono_whatsapp: e.target.value })} placeholder="(19) 90000-0000" />
+              </S.Field>
+            </div>
+            <div className="modal-actions">
+              <S.Btn type="button" $variant="ghost" onClick={fecharModal}>Cancelar</S.Btn>
+              <S.Btn type="button" $variant="primary" disabled={salvando} onClick={salvarDono}>{salvando ? 'Salvando…' : 'Salvar'}</S.Btn>
             </div>
           </S.ModalCard>
         </S.Overlay>
