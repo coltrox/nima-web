@@ -75,6 +75,16 @@ const devService = {
     }
   },
 
+  // Cria um usuário de equipe: dev (cargo 'desenvolvedor') ou membro de ONG (cargo 'ong' + ong_id).
+  criarUsuario: async (dados) => {
+    try {
+      const response = await axios.post(`${API_URL}/usuarios`, dados, authHeader());
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || 'Erro ao criar usuário.';
+    }
+  },
+
   // Gera um lote de Patinhas para uma ONG (o dev fabrica; a ONG só relaciona).
   criarTags: async (ong_id, quantidade, prefixo) => {
     try {
