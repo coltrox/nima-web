@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Check, X, Pencil, Power, Building2, AtSign, Phone, Nfc, Users } from 'lucide-react';
+import { Check, X, Pencil, Power, Building2, AtSign, Phone, Nfc } from 'lucide-react';
 import devService from '../../../services/devService';
 import * as S from '../../Panel/panelStyles';
 
@@ -30,10 +30,6 @@ export default function GestaoOngs() {
   const [qtd, setQtd] = useState(10);
   const [prefixo, setPrefixo] = useState('NIMA-');
   const [resultado, setResultado] = useState(null);
-
-  // Equipe da ONG
-  const [membros, setMembros] = useState([]);
-  const [novoMembro, setNovoMembro] = useState({ nome: '', email: '', senha: '' });
 
   const carregar = async () => {
     try {
@@ -115,27 +111,7 @@ export default function GestaoOngs() {
     finally { setSalvando(false); }
   };
 
-  const abrirEquipe = async (o) => {
-    setAlvo(o); setMembros([]); setNovoMembro({ nome: '', email: '', senha: '' }); setModal('equipe');
-    try { setMembros(await devService.listarUsuarios({ ong_id: o.id })); } catch { /* ignore */ }
-  };
-
-  const criarMembro = async (e) => {
-    e.preventDefault();
-    if (!novoMembro.nome || !novoMembro.email || novoMembro.senha.length < 6) {
-      setErro('Preencha nome, e-mail e uma senha de ao menos 6 caracteres.');
-      return;
-    }
-    try {
-      setSalvando(true); setErro('');
-      await devService.criarUsuario({ ...novoMembro, cargo: 'ong', ong_id: alvo.id });
-      setNovoMembro({ nome: '', email: '', senha: '' });
-      setMembros(await devService.listarUsuarios({ ong_id: alvo.id }));
-    } catch (e) { setErro(typeof e === 'string' ? e : 'Erro ao adicionar membro.'); }
-    finally { setSalvando(false); }
-  };
-
-  const fechar = () => { setModal(null); setAlvo(null); setMotivo(''); setEdit(editVazio); setResultado(null); setTagsOng([]); setMembros([]); };
+  const fechar = () => { setModal(null); setAlvo(null); setMotivo(''); setEdit(editVazio); setResultado(null); setTagsOng([]); };
 
   return (
     <>
@@ -195,7 +171,6 @@ export default function GestaoOngs() {
                         )}
                         <S.Btn $sm $variant="ghost" onClick={() => abrirEditar(o)} title="Editar contato"><Pencil size={14} /></S.Btn>
                         <S.Btn $sm $variant="subtle" onClick={() => abrirPatinhas(o)} title="Gerar Patinhas"><Nfc size={14} /></S.Btn>
-                        <S.Btn $sm $variant="subtle" onClick={() => abrirEquipe(o)} title="Equipe da ONG"><Users size={14} /></S.Btn>
                         <S.Btn $sm $variant="ghost" onClick={() => toggleAtiva(o)} title={o.ativo === false ? 'Reativar' : 'Suspender'}><Power size={14} /></S.Btn>
                       </div>
                     </td>
@@ -284,62 +259,6 @@ export default function GestaoOngs() {
         </S.Overlay>
       )}
 
-      {/* MODAL equipe da ONG */}
-      {modal === 'equipe' && alvo && (
-        <S.Overlay onClick={fechar}>
-          <S.ModalCard onClick={(e) => e.stopPropagation()}>
-            <h3>Equipe — {alvo.nome}</h3>
-            <p className="modal-sub">
-              Pessoas que entram no painel desta ONG. Todas enxergam os <strong>mesmos pets, Patinhas e vaquinhas</strong>.
-            </p>
-
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 8 }}>
-                Conta principal
-              </div>
-              <div style={{ fontSize: 14 }}>
-                <strong>{alvo.nome}</strong>{' '}
-                <span style={{ color: 'var(--ink-soft)' }}>· {alvo.email}</span>
-              </div>
-
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--ink-soft)', margin: '16px 0 8px' }}>
-                Membros ({membros.length})
-              </div>
-              {membros.length === 0 ? (
-                <p style={{ fontSize: 13.5, color: 'var(--ink-soft)', margin: 0 }}>Nenhum membro adicional ainda.</p>
-              ) : (
-                <div style={{ display: 'grid', gap: 8 }}>
-                  {membros.map((m) => (
-                    <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, fontSize: 13.5 }}>
-                      <span><strong>{m.nome}</strong> <span style={{ color: 'var(--ink-soft)' }}>· {m.email}</span></span>
-                      <S.Badge $tone={m.ativo === false ? 'red' : 'green'}>{m.ativo === false ? 'Suspenso' : 'Ativo'}</S.Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <form onSubmit={criarMembro} style={{ borderTop: '1px solid var(--line)', paddingTop: 16 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--ink-soft)', marginBottom: 10 }}>Adicionar membro</div>
-              <S.Field>Nome
-                <S.Input value={novoMembro.nome} onChange={(e) => setNovoMembro({ ...novoMembro, nome: e.target.value })} placeholder="Ex: João da Silva" />
-              </S.Field>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <S.Field>E-mail
-                  <S.Input type="email" value={novoMembro.email} onChange={(e) => setNovoMembro({ ...novoMembro, email: e.target.value })} placeholder="joao@ong.org" />
-                </S.Field>
-                <S.Field>Senha
-                  <S.Input type="password" value={novoMembro.senha} onChange={(e) => setNovoMembro({ ...novoMembro, senha: e.target.value })} placeholder="mín. 6 caracteres" />
-                </S.Field>
-              </div>
-              <div className="modal-actions">
-                <S.Btn type="button" $variant="ghost" onClick={fechar}>Fechar</S.Btn>
-                <S.Btn type="submit" $variant="primary" disabled={salvando}>{salvando ? 'Adicionando…' : 'Adicionar membro'}</S.Btn>
-              </div>
-            </form>
-          </S.ModalCard>
-        </S.Overlay>
-      )}
     </>
   );
 }

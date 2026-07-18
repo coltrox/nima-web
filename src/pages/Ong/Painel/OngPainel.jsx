@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { PawPrint, ClipboardList, PiggyBank, Users, Nfc } from 'lucide-react';
+import { PawPrint, ClipboardList, PiggyBank, Users, Nfc, UserCog } from 'lucide-react';
 import PanelLayout from '../../Panel/PanelLayout';
 import { useAuth } from '../../../contexts/AuthContext';
 import Animais from './Animais';
@@ -8,6 +8,7 @@ import Candidaturas from './Candidaturas';
 import Vaquinhas from './Vaquinhas';
 import Vagas from './Vagas';
 import Patinhas from './Patinhas';
+import Equipe from './Equipe';
 
 const NAV = [
   { to: '/ong/painel', label: 'Animais', icon: <PawPrint size={18} />, end: true },
@@ -15,6 +16,7 @@ const NAV = [
   { to: '/ong/painel/patinhas', label: 'Patinhas', icon: <Nfc size={18} /> },
   { to: '/ong/painel/vaquinhas', label: 'Vaquinhas', icon: <PiggyBank size={18} /> },
   { to: '/ong/painel/vagas', label: 'Vagas', icon: <Users size={18} /> },
+  { to: '/ong/painel/equipe', label: 'Equipe', icon: <UserCog size={18} /> },
 ];
 
 export default function OngPainel() {
@@ -34,6 +36,7 @@ export default function OngPainel() {
         <Route path="patinhas" element={<Patinhas />} />
         <Route path="vaquinhas" element={<Vaquinhas />} />
         <Route path="vagas" element={<Vagas />} />
+        <Route path="equipe" element={<Equipe />} />
         <Route path="*" element={<Navigate to="/ong/painel" replace />} />
       </Routes>
     </PanelLayout>
