@@ -36,4 +36,28 @@ export const voluntariadoService = {
     }
     return r.json();
   },
+
+  // Aceita/recusa um candidato — aceitar é o que preenche a vaga.
+  async decidir(inscricaoId, status) {
+    const r = await fetch(`${API_URL}/vagas/inscricoes/${inscricaoId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...auth() },
+      body: JSON.stringify({ status }),
+    });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.error || e.message || 'Erro ao atualizar o candidato.');
+    }
+    return r.json();
+  },
+
+  // Exclui a vaga (leva as inscrições junto)
+  async remover(id) {
+    const r = await fetch(`${API_URL}/vagas/${id}`, { method: 'DELETE', headers: auth() });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.error || e.message || 'Erro ao excluir a vaga.');
+    }
+    return r.json();
+  },
 };
