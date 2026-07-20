@@ -37,7 +37,10 @@ export default function VisaoGeral() {
           <S.StatCard>
             <span className="label">Usuários</span>
             <span className="value">{dados.usuarios.total}</span>
-            <span className="sub">{dados.usuarios.tutores} tutores · {dados.usuarios.ongs} ONGs · {dados.usuarios.devs} devs</span>
+            <span className="sub">
+              {dados.usuarios.tutores} tutores · {dados.usuarios.ongs} ONGs
+              {dados.usuarios.membros > 0 && ` (+${dados.usuarios.membros} de equipe)`} · {dados.usuarios.devs} devs
+            </span>
           </S.StatCard>
 
           <S.StatCard>

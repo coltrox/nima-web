@@ -85,8 +85,12 @@ export default function GestaoOngs() {
   };
 
   const toggleAtiva = async (o) => {
-    const acao = o.ativo ? 'suspender' : 'reativar';
-    if (!window.confirm(`Deseja ${acao} a conta de "${o.nome}"?`)) return;
+    // Suspender uma ONG derruba a equipe dela junto; reativar traz de volta só
+    // quem caiu nessa cascata (quem a própria ONG suspendeu continua suspenso).
+    const aviso = o.ativo
+      ? `Suspender a ONG "${o.nome}"? A equipe dela perde o acesso junto.`
+      : `Reativar a ONG "${o.nome}"? Voltam só os membros que caíram junto com ela.`;
+    if (!window.confirm(aviso)) return;
     try {
       setErro('');
       await devService.setUsuarioAtivo(o.id, !o.ativo);
@@ -166,7 +170,9 @@ export default function GestaoOngs() {
                         {o.homologacao_status !== 'aprovada' && (
                           <S.Btn $sm $variant="primary" onClick={() => aprovar(o)} title="Aprovar"><Check size={14} /></S.Btn>
                         )}
-                        {o.homologacao_status !== 'rejeitada' && (
+                        {/* Rejeitar é decisão de HOMOLOGAÇÃO: só faz sentido enquanto está pendente.
+                            ONG já aprovada se resolve com Suspender (o Power ali embaixo). */}
+                        {o.homologacao_status === 'pendente' && (
                           <S.Btn $sm $variant="danger" onClick={() => abrirRejeitar(o)} title="Rejeitar"><X size={14} /></S.Btn>
                         )}
                         <S.Btn $sm $variant="ghost" onClick={() => abrirEditar(o)} title="Editar contato"><Pencil size={14} /></S.Btn>
