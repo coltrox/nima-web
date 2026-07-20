@@ -152,7 +152,7 @@ export default function Landing() {
                 <S.MatchBadge>
                   <MapPin size={13} /> ONG Patas Unidas · 4 km
                 </S.MatchBadge>
-                <img src="/pets/bidu.jpg" alt="Bidu, um vira-lata caramelo" />
+                <img src="/pets/bidu1.jpg" alt="Bidu, um vira-lata caramelo" />
               </S.MatchPhoto>
 
               <S.MatchBody>
