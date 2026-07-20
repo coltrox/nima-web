@@ -23,4 +23,9 @@ export const equipeService = {
   setAtivo: (id, ativo) => fetch(`${API_URL}/ong/equipe/${id}/ativo`, {
     method: 'PATCH', headers: { 'Content-Type': 'application/json', ...auth() }, body: JSON.stringify({ ativo }),
   }).then((r) => json(r, 'Erro ao atualizar o membro.')),
+
+  // Define o que o membro pode fazer (só a conta principal)
+  setPermissoes: (id, permissoes) => fetch(`${API_URL}/ong/equipe/${id}/permissoes`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json', ...auth() }, body: JSON.stringify({ permissoes }),
+  }).then((r) => json(r, 'Erro ao salvar permissões.')),
 };
