@@ -24,4 +24,17 @@ export const tagsService = {
   desvincular: (id) => fetch(`${API_URL}/tags/${id}/desvincular`, {
     method: 'PUT', headers: auth(),
   }).then((r) => json(r, 'Erro ao desvincular Patinha.')),
+
+  // ------------------------------------------------- PEDIDOS DE PATINHA
+  // Tutores pedem pelo app (doação ou voluntariado); a ONG despacha aqui.
+  // A resposta traz { pedidos, tags_livres } — as livres são o que ela
+  // consegue entregar agora.
+  listarPedidos: () => fetch(`${API_URL}/ong/patinhas/pedidos`, { headers: auth() })
+    .then((r) => json(r, 'Erro ao listar pedidos de Patinha.')),
+
+  // patch: { status?, resposta?, tag_id? }
+  // Informando tag_id e havendo pet no pedido, a tag é vinculada de verdade.
+  decidirPedido: (id, patch) => fetch(`${API_URL}/ong/patinhas/pedidos/${id}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...auth() }, body: JSON.stringify(patch),
+  }).then((r) => json(r, 'Erro ao atualizar o pedido.')),
 };

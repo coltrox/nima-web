@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { PawPrint, ClipboardList, PiggyBank, Users, Nfc, UserCog, History } from 'lucide-react';
+import { PawPrint, ClipboardList, PiggyBank, Users, Nfc, UserCog, History, Inbox } from 'lucide-react';
 import PanelLayout from '../../Panel/PanelLayout';
 import { useAuth } from '../../../contexts/AuthContext';
 import Animais from './Animais';
@@ -8,6 +8,7 @@ import Candidaturas from './Candidaturas';
 import Vaquinhas from './Vaquinhas';
 import Vagas from './Vagas';
 import Patinhas from './Patinhas';
+import PedidosPatinha from './PedidosPatinha';
 import Equipe from './Equipe';
 import Atividades from './Atividades';
 
@@ -17,6 +18,8 @@ const NAV = [
   { to: '/ong/painel', label: 'Animais', icon: <PawPrint size={18} />, end: true },
   { to: '/ong/painel/candidaturas', label: 'Candidaturas', icon: <ClipboardList size={18} />, perm: 'candidaturas' },
   { to: '/ong/painel/patinhas', label: 'Patinhas', icon: <Nfc size={18} />, perm: 'patinhas' },
+  // Mesma permissão do estoque de Patinhas: quem pode vincular tag pode despachar pedido.
+  { to: '/ong/painel/pedidos-patinha', label: 'Pedidos de Patinha', icon: <Inbox size={18} />, perm: 'patinhas' },
   { to: '/ong/painel/vaquinhas', label: 'Vaquinhas', icon: <PiggyBank size={18} />, perm: 'vaquinhas' },
   { to: '/ong/painel/vagas', label: 'Vagas', icon: <Users size={18} />, perm: 'vagas' },
   { to: '/ong/painel/equipe', label: 'Equipe', icon: <UserCog size={18} />, dono: true },
@@ -49,6 +52,7 @@ export default function OngPainel() {
         <Route index element={<Animais />} />
         <Route path="candidaturas" element={<Candidaturas />} />
         <Route path="patinhas" element={<Patinhas />} />
+        <Route path="pedidos-patinha" element={<PedidosPatinha />} />
         <Route path="vaquinhas" element={<Vaquinhas />} />
         <Route path="vagas" element={<Vagas />} />
         <Route path="equipe" element={<Equipe />} />
