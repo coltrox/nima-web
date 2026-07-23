@@ -25,11 +25,12 @@ export default function GestaoOngs() {
   const [edit, setEdit] = useState(editVazio);
   const [salvando, setSalvando] = useState(false);
 
-  // Geração de Patinhas em lote
+  // Estoque de Patinhas da ONG (quantidade total, não incremento)
   const [tagsOng, setTagsOng] = useState([]);
   const [qtd, setQtd] = useState(10);
   const [prefixo, setPrefixo] = useState('NIMA-');
   const [resultado, setResultado] = useState(null);
+  const [bloqueadas, setBloqueadas] = useState(null);
 
   const carregar = async () => {
     try {
@@ -99,23 +100,40 @@ export default function GestaoOngs() {
   };
 
   const abrirPatinhas = async (o) => {
-    setAlvo(o); setQtd(10); setPrefixo('NIMA-'); setResultado(null); setTagsOng([]); setModal('patinhas');
-    try { setTagsOng(await devService.listarTags(o.id)); } catch { /* ignore */ }
+    setAlvo(o); setPrefixo('NIMA-'); setResultado(null); setBloqueadas(null); setTagsOng([]); setModal('patinhas');
+    try {
+      const atuais = await devService.listarTags(o.id);
+      setTagsOng(atuais);
+      // O campo já vem com o total atual: a ação é AJUSTAR, não somar.
+      setQtd(atuais.length);
+    } catch { /* ignore */ }
   };
 
-  const gerar = async () => {
+  // Define o TOTAL de Patinhas da ONG. Subir cria as faltantes; descer remove
+  // as últimas da sequência — e o backend recusa se alguma delas já estiver
+  // na coleira de um pet.
+  const definir = async () => {
     const n = parseInt(qtd, 10);
-    if (!Number.isInteger(n) || n < 1) { setErro('Quantidade inválida.'); return; }
+    if (!Number.isInteger(n) || n < 0) { setErro('Quantidade inválida.'); return; }
     try {
-      setSalvando(true); setErro('');
-      const r = await devService.criarTags(alvo.id, n, prefixo);
+      setSalvando(true); setErro(''); setBloqueadas(null);
+      const r = await devService.definirQuantidadeTags(alvo.id, n, prefixo);
       setResultado(r);
       setTagsOng(await devService.listarTags(alvo.id));
-    } catch (e) { setErro(typeof e === 'string' ? e : 'Erro ao gerar Patinhas.'); }
-    finally { setSalvando(false); }
+    } catch (e) {
+      if (e && e.bloqueadas) {
+        setBloqueadas(e.bloqueadas);
+        setErro(e.message || 'Há Patinhas vinculadas nessa faixa.');
+      } else {
+        setErro(typeof e === 'string' ? e : 'Erro ao definir a quantidade de Patinhas.');
+      }
+    } finally { setSalvando(false); }
   };
 
-  const fechar = () => { setModal(null); setAlvo(null); setMotivo(''); setEdit(editVazio); setResultado(null); setTagsOng([]); };
+  const fechar = () => {
+    setModal(null); setAlvo(null); setMotivo(''); setEdit(editVazio);
+    setResultado(null); setTagsOng([]); setBloqueadas(null); setErro('');
+  };
 
   return (
     <>
@@ -176,7 +194,7 @@ export default function GestaoOngs() {
                           <S.Btn $sm $variant="danger" onClick={() => abrirRejeitar(o)} title="Rejeitar"><X size={14} /></S.Btn>
                         )}
                         <S.Btn $sm $variant="ghost" onClick={() => abrirEditar(o)} title="Editar contato"><Pencil size={14} /></S.Btn>
-                        <S.Btn $sm $variant="subtle" onClick={() => abrirPatinhas(o)} title="Gerar Patinhas"><Nfc size={14} /></S.Btn>
+                        <S.Btn $sm $variant="subtle" onClick={() => abrirPatinhas(o)} title="Patinhas da ONG"><Nfc size={14} /></S.Btn>
                         <S.Btn $sm $variant="ghost" onClick={() => toggleAtiva(o)} title={o.ativo === false ? 'Reativar' : 'Suspender'}><Power size={14} /></S.Btn>
                       </div>
                     </td>
@@ -236,30 +254,67 @@ export default function GestaoOngs() {
           <S.ModalCard onClick={(e) => e.stopPropagation()}>
             <h3>Patinhas — {alvo.nome}</h3>
             <p className="modal-sub">
-              Gera um lote de Patinhas pra esta ONG. Ela recebe já com o código e só relaciona aos pets.
-              {' '}Hoje: <strong>{tagsOng.length}</strong> no total · <strong>{tagsOng.filter((t) => !t.animal_id).length}</strong> livres.
+              Defina <strong>quantas Patinhas esta ONG tem</strong> — o número é o total, não um acréscimo.
+              Subir cria as que faltam; descer remove as últimas da sequência.
+              {' '}Hoje: <strong>{tagsOng.length}</strong> no total ·{' '}
+              <strong>{tagsOng.filter((t) => !t.animal_id).length}</strong> livres ·{' '}
+              <strong>{tagsOng.filter((t) => t.animal_id).length}</strong> em uso.
             </p>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <S.Field>Quantidade
-                <S.Input type="number" min="1" max="200" value={qtd} onChange={(e) => setQtd(e.target.value)} />
+              <S.Field>Quantidade total
+                <S.Input type="number" min="0" max="500" value={qtd} onChange={(e) => setQtd(e.target.value)} />
               </S.Field>
-              <S.Field>Prefixo
+              <S.Field>Prefixo do código
                 <S.Input value={prefixo} onChange={(e) => setPrefixo(e.target.value)} placeholder="NIMA-" />
               </S.Field>
             </div>
 
+            {/* A URL gravada na tag leva o slug da ONG: o código é único por ONG,
+                não globalmente, então sem o slug duas ONGs colidiriam. */}
+            {alvo.slug && (
+              <div style={{ background: 'var(--sky)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
+                <strong style={{ fontSize: 13, color: 'var(--blue)' }}>Endereço gravado nas tags</strong>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12.5, marginTop: 6, color: 'var(--ink)', wordBreak: 'break-all' }}>
+                  https://adotenima.com.br/tag/{alvo.slug}/{prefixo}0001
+                </div>
+              </div>
+            )}
+
+            {bloqueadas && (
+              <div style={{ background: 'rgba(229,72,77,0.1)', border: '1px solid rgba(229,72,77,0.3)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
+                <strong style={{ color: '#c0343a' }}>Estas Patinhas estão em uso e não podem ser removidas:</strong>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12.5, marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: '4px 10px' }}>
+                  {bloqueadas.map((t) => <span key={t.id}>{t.codigo}</span>)}
+                </div>
+                <div style={{ fontSize: 12.5, marginTop: 8, color: 'var(--ink-soft)' }}>
+                  Peça à ONG para desvincular esses pets antes de reduzir o estoque.
+                </div>
+              </div>
+            )}
+
             {resultado && (
               <div style={{ background: 'rgba(31,157,107,0.1)', border: '1px solid rgba(31,157,107,0.3)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
-                <strong style={{ color: 'var(--moss)' }}>{resultado.criadas} Patinha(s) gerada(s):</strong>
+                <strong style={{ color: 'var(--moss)' }}>
+                  Agora são {resultado.quantidade} Patinha(s)
+                  {resultado.criadas > 0 && ` · ${resultado.criadas} criada(s)`}
+                  {resultado.removidas > 0 && ` · ${resultado.removidas} removida(s)`}
+                </strong>
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12.5, marginTop: 6, color: 'var(--ink)', display: 'flex', flexWrap: 'wrap', gap: '4px 10px' }}>
-                  {(resultado.tags || []).map((t) => <span key={t.id}>{t.codigo}</span>)}
+                  {(resultado.tags || []).map((t) => (
+                    <span key={t.id} style={{ opacity: t.animal_id ? 0.55 : 1 }}>
+                      {t.codigo}{t.animal_id ? ' (em uso)' : ''}
+                    </span>
+                  ))}
                 </div>
               </div>
             )}
 
             <div className="modal-actions">
               <S.Btn type="button" $variant="ghost" onClick={fechar}>Fechar</S.Btn>
-              <S.Btn type="button" $variant="primary" disabled={salvando} onClick={gerar}>{salvando ? 'Gerando…' : 'Gerar Patinhas'}</S.Btn>
+              <S.Btn type="button" $variant="primary" disabled={salvando} onClick={definir}>
+                {salvando ? 'Aplicando…' : 'Definir quantidade'}
+              </S.Btn>
             </div>
           </S.ModalCard>
         </S.Overlay>

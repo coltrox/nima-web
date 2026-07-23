@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Syringe, Nfc, RefreshCw, PawPrint, UserRound, Trash2 } from 'lucide-react';
 import { animalService } from '../../../services/animalService';
 import { tagsService } from '../../../services/tagsService';
@@ -7,6 +7,13 @@ import * as S from '../../Panel/panelStyles';
 const STATUS_TONE = { 'Disponível': 'green', 'Adotado': 'blue', 'Desaparecido': 'amber' };
 const STATUS_OPS = ['Disponível', 'Adotado', 'Desaparecido'];
 
+// `sob_gestao` vem do backend: false = a posse já foi transferida ao tutor
+// numa adoção aprovada, e o animal continua listado só pelo `ong_origem_id`.
+const ABAS = [
+  { v: 'acervo', label: 'Acervo' },
+  { v: 'adotados', label: 'Adotados' },
+];
+
 const formVazio = { nome: '', especie: 'Cão', raca: '', porte: 'Médio', idade: '', temperamento: '', dono_nome: '', dono_telefone: '', dono_whatsapp: '' };
 const donoVazio = { dono_nome: '', dono_telefone: '', dono_whatsapp: '' };
 
@@ -14,6 +21,22 @@ export default function Animais() {
   const [animais, setAnimais] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
+  // 'acervo' = ainda sob gestão da ONG · 'adotados' = posse já transferida
+  const [aba, setAba] = useState('acervo');
+
+  // Backend antigo não mandava `sob_gestao`; ausente é tratado como acervo.
+  const ehAdotado = (a) => a.sob_gestao === false;
+  const listados = useMemo(
+    () => animais.filter((a) => (aba === 'adotados' ? ehAdotado(a) : !ehAdotado(a))),
+    [animais, aba],
+  );
+  const contagem = useMemo(
+    () => ({
+      acervo: animais.filter((a) => !ehAdotado(a)).length,
+      adotados: animais.filter(ehAdotado).length,
+    }),
+    [animais],
+  );
 
   const [modal, setModal] = useState(null); // 'novo' | 'vacinas' | 'tag' | 'dono' | null
   const [form, setForm] = useState(formVazio);
@@ -145,13 +168,33 @@ export default function Animais() {
 
       {erro && <S.Alert>⚠️ {erro}</S.Alert>}
 
+      {/* A lista inclui os pets que a ONG DEU para adoção: ao aprovar, a posse
+          passa para o tutor (ong_id nulo) e o vínculo com a ONG fica em
+          ong_origem_id. Sem o filtro, eles se misturariam ao acervo ativo. */}
+      <S.Toolbar>
+        {ABAS.map((f) => (
+          <S.Btn
+            key={f.v}
+            $sm
+            $variant={aba === f.v ? 'primary' : 'ghost'}
+            onClick={() => setAba(f.v)}
+          >
+            {f.label} ({contagem[f.v]})
+          </S.Btn>
+        ))}
+      </S.Toolbar>
+
       <S.Card style={{ padding: 0, overflow: 'hidden' }}>
         {carregando ? (
           <S.Spinner $center />
-        ) : animais.length === 0 ? (
+        ) : listados.length === 0 ? (
           <S.Empty style={{ border: 'none' }}>
             <PawPrint size={30} style={{ opacity: 0.4 }} /><br />
-            Nenhum animal cadastrado ainda. Clique em “Cadastrar animal”.
+            {animais.length === 0
+              ? 'Nenhum animal cadastrado ainda. Clique em “Cadastrar animal”.'
+              : aba === 'adotados'
+                ? 'Nenhuma adoção concluída ainda.'
+                : 'Nenhum animal no acervo ativo.'}
           </S.Empty>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -168,8 +211,8 @@ export default function Animais() {
                 </tr>
               </thead>
               <tbody>
-                {animais.map((a) => (
-                  <tr key={a.id}>
+                {listados.map((a) => (
+                  <tr key={a.id} style={{ opacity: a.sob_gestao === false ? 0.72 : 1 }}>
                     <td>
                       {a.fotos && a.fotos[0] ? (
                         <img src={a.fotos[0]} alt={a.nome} style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover' }} />
@@ -185,19 +228,28 @@ export default function Animais() {
                     <td>{a.idade}</td>
                     <td><S.Badge $tone={STATUS_TONE[a.status_posse] || 'gray'}>{a.status_posse || 'Disponível'}</S.Badge></td>
                     <td>
-                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <S.Select
-                          style={{ width: 'auto', padding: '6px 8px', fontSize: 13 }}
-                          value={a.status_posse || 'Disponível'}
-                          onChange={(e) => mudarStatus(a.id, e.target.value)}
-                        >
-                          {STATUS_OPS.map((s) => <option key={s} value={s}>{s}</option>)}
-                        </S.Select>
-                        <S.Btn $variant="ghost" $sm onClick={() => abrirVacinas(a)} title="Prontuário de vacinas"><Syringe size={15} /></S.Btn>
-                        <S.Btn $variant="ghost" $sm onClick={() => abrirTag(a)} title="Vincular Patinha (Smart Tag)"><Nfc size={15} /></S.Btn>
-                        <S.Btn $variant="ghost" $sm onClick={() => abrirDono(a)} title="Contato do dono/tutor"><UserRound size={15} /></S.Btn>
-                        <S.Btn $variant="danger" $sm onClick={() => excluir(a)} title="Excluir pet"><Trash2 size={15} /></S.Btn>
-                      </div>
+                      {/* Pet já adotado saiu da posse da ONG (tutor_id preenchido,
+                          ong_id nulo): as rotas de escrita respondem 404 nele.
+                          Em vez de botões que falham, mostramos o histórico. */}
+                      {a.sob_gestao === false ? (
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
+                          <S.Badge $tone="blue">Adotado — agora é do tutor</S.Badge>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <S.Select
+                            style={{ width: 'auto', padding: '6px 8px', fontSize: 13 }}
+                            value={a.status_posse || 'Disponível'}
+                            onChange={(e) => mudarStatus(a.id, e.target.value)}
+                          >
+                            {STATUS_OPS.map((s) => <option key={s} value={s}>{s}</option>)}
+                          </S.Select>
+                          <S.Btn $variant="ghost" $sm onClick={() => abrirVacinas(a)} title="Prontuário de vacinas"><Syringe size={15} /></S.Btn>
+                          <S.Btn $variant="ghost" $sm onClick={() => abrirTag(a)} title="Vincular Patinha (Smart Tag)"><Nfc size={15} /></S.Btn>
+                          <S.Btn $variant="ghost" $sm onClick={() => abrirDono(a)} title="Contato do dono/tutor"><UserRound size={15} /></S.Btn>
+                          <S.Btn $variant="danger" $sm onClick={() => excluir(a)} title="Excluir pet"><Trash2 size={15} /></S.Btn>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
