@@ -24,7 +24,9 @@ const STATUS = {
   recusado: { rotulo: 'Recusado', tom: 'red' },
 };
 
-const ORIGEM = { doacao: 'Doação', voluntariado: 'Voluntariado', compra: 'Compra' };
+// 'doacao' saiu na migração 018 — era a única origem que ninguém conseguia
+// verificar. Fica no mapa só para não mostrar "undefined" em pedido antigo.
+const ORIGEM = { evento: 'Evento', voluntariado: 'Voluntariado', compra: 'Compra', doacao: 'Doação (formato antigo)' };
 
 const ABAS = [
   { v: 'abertos', label: 'Em aberto' },
@@ -106,7 +108,11 @@ export default function PedidosPatinha() {
       <S.PageHead>
         <div>
           <h1>Pedidos de Patinha</h1>
-          <p>Tutores que pediram uma Patinha à sua ONG — por doação ou voluntariado.</p>
+          <p>
+            Tutores que pediram uma Patinha à sua ONG — por presença em evento ou voluntariado.
+            Ao escolher a Patinha, ela fica reservada no nome do tutor; a posse muda quando ele
+            digitar o código no app.
+          </p>
         </div>
         <S.Btn $variant="ghost" $sm onClick={carregar}><RefreshCw size={15} /> Atualizar</S.Btn>
       </S.PageHead>
@@ -225,12 +231,23 @@ export default function PedidosPatinha() {
             )}
 
             {/* O que dá e o que não dá para confiar */}
-            {alvo.origem === 'doacao' ? (
-              <div style={{ background: 'rgba(255,194,75,0.16)', border: '1px solid rgba(255,194,75,0.4)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
-                <strong style={{ color: '#8a5a00', fontSize: 13 }}>Confirme antes de aprovar</strong>
+            {alvo.origem === 'evento' ? (
+              <div style={{ background: 'rgba(31,157,107,0.1)', border: '1px solid rgba(31,157,107,0.3)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
+                <strong style={{ color: 'var(--moss)', fontSize: 13 }}>Presença já conferida</strong>
                 <div style={{ fontSize: 13, color: 'var(--ink)', marginTop: 5 }}>
-                  A doação cai direto no Pix da sua ONG, fora do app — o sistema não tem como
-                  verificar. Procure no seu extrato o valor e a data que o tutor informou.
+                  Alguém da sua ONG marcou a presença deste tutor
+                  {alvo.evento?.titulo ? ` em “${alvo.evento.titulo}”` : ' num evento seu'}
+                  {alvo.evento?.data_inicio
+                    ? `, em ${new Date(alvo.evento.data_inicio).toLocaleDateString('pt-BR')}`
+                    : ''}. O backend recusa o pedido sem essa marcação.
+                </div>
+              </div>
+            ) : alvo.origem === 'doacao' ? (
+              <div style={{ background: 'rgba(255,194,75,0.16)', border: '1px solid rgba(255,194,75,0.4)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
+                <strong style={{ color: '#8a5a00', fontSize: 13 }}>Pedido no formato antigo</strong>
+                <div style={{ fontSize: 13, color: 'var(--ink)', marginTop: 5 }}>
+                  Este pedido veio de quando a doação valia como origem. Ninguém consegue
+                  verificar um Pix que cai fora do app — confira no seu extrato antes de aprovar.
                 </div>
               </div>
             ) : alvo.origem === 'voluntariado' ? (

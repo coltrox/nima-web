@@ -25,6 +25,20 @@ export const tagsService = {
     method: 'PUT', headers: auth(),
   }).then((r) => json(r, 'Erro ao desvincular Patinha.')),
 
+  // ------------------------------------------------------ ENTREGA (018)
+  // Reservar é a autorização de entrega: sem ela o tutor não resgata nem
+  // sabendo o código. Os códigos são sequenciais (NIMA-0001, 0002…), então
+  // "saber o código" sozinho não prova nada.
+  reservar: (id, { tutor_id, email }) => fetch(`${API_URL}/tags/${id}/reservar`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...auth() },
+    body: JSON.stringify(tutor_id ? { tutor_id } : { email }),
+  }).then((r) => json(r, 'Erro ao reservar a Patinha.')),
+
+  cancelarReserva: (id) => fetch(`${API_URL}/tags/${id}/reserva`, {
+    method: 'DELETE', headers: auth(),
+  }).then((r) => json(r, 'Erro ao cancelar a reserva.')),
+
   // ------------------------------------------------- PEDIDOS DE PATINHA
   // Tutores pedem pelo app (doação ou voluntariado); a ONG despacha aqui.
   // A resposta traz { pedidos, tags_livres } — as livres são o que ela

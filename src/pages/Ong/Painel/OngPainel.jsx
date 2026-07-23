@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { PawPrint, ClipboardList, PiggyBank, Users, Nfc, UserCog, History, Inbox } from 'lucide-react';
+import { PawPrint, ClipboardList, PiggyBank, Users, Nfc, UserCog, History, Inbox, CalendarDays } from 'lucide-react';
 import PanelLayout from '../../Panel/PanelLayout';
 import { useAuth } from '../../../contexts/AuthContext';
 import Animais from './Animais';
@@ -9,6 +9,7 @@ import Vaquinhas from './Vaquinhas';
 import Vagas from './Vagas';
 import Patinhas from './Patinhas';
 import PedidosPatinha from './PedidosPatinha';
+import Eventos from './Eventos';
 import Equipe from './Equipe';
 import Atividades from './Atividades';
 
@@ -22,6 +23,9 @@ const NAV = [
   { to: '/ong/painel/pedidos-patinha', label: 'Pedidos de Patinha', icon: <Inbox size={18} />, perm: 'patinhas' },
   { to: '/ong/painel/vaquinhas', label: 'Vaquinhas', icon: <PiggyBank size={18} />, perm: 'vaquinhas' },
   { to: '/ong/painel/vagas', label: 'Vagas', icon: <Users size={18} />, perm: 'vagas' },
+  // Evento é pontual e datado (feira, mutirão); vaga é trabalho contínuo.
+  // Permissão própria porque só aqui se marca presença — e presença vira Patinha.
+  { to: '/ong/painel/eventos', label: 'Eventos', icon: <CalendarDays size={18} />, perm: 'eventos' },
   { to: '/ong/painel/equipe', label: 'Equipe', icon: <UserCog size={18} />, dono: true },
   { to: '/ong/painel/atividades', label: 'Atividades', icon: <History size={18} />, dono: true },
 ];
@@ -55,6 +59,7 @@ export default function OngPainel() {
         <Route path="pedidos-patinha" element={<PedidosPatinha />} />
         <Route path="vaquinhas" element={<Vaquinhas />} />
         <Route path="vagas" element={<Vagas />} />
+        <Route path="eventos" element={<Eventos />} />
         <Route path="equipe" element={<Equipe />} />
         <Route path="atividades" element={<Atividades />} />
         <Route path="*" element={<Navigate to="/ong/painel" replace />} />

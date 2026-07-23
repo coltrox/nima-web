@@ -10,9 +10,10 @@ const vazio = { nome: '', email: '', senha: '', telefone: '', permissoes: {} };
 const PERMISSOES = [
   { chave: 'animais', rotulo: 'Gerenciar pets', ajuda: 'Cadastrar, editar, excluir, fotos e vacinas' },
   { chave: 'candidaturas', rotulo: 'Decidir adoções', ajuda: 'Aprovar ou recusar candidaturas' },
-  { chave: 'patinhas', rotulo: 'Vincular Patinhas', ajuda: 'Relacionar e desvincular tags de pets' },
+  { chave: 'patinhas', rotulo: 'Gerenciar Patinhas', ajuda: 'Vincular a pets, reservar para tutores e despachar pedidos' },
   { chave: 'vaquinhas', rotulo: 'Gerenciar vaquinhas', ajuda: 'Criar e editar campanhas de doação' },
   { chave: 'vagas', rotulo: 'Publicar vagas', ajuda: 'Abrir vagas de voluntariado' },
+  { chave: 'eventos', rotulo: 'Gerenciar eventos', ajuda: 'Criar feiras e mutirões e marcar presença — a presença libera Patinha' },
 ];
 
 function Checks({ valor, onChange }) {
