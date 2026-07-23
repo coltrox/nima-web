@@ -100,7 +100,11 @@ export default function GestaoOngs() {
   };
 
   const abrirPatinhas = async (o) => {
-    setAlvo(o); setPrefixo('NIMA-'); setResultado(null); setBloqueadas(null); setTagsOng([]); setModal('patinhas');
+    // O prefixo vem da ONG (profiles.prefixo_tag, migração 018), não de um
+    // padrão fixo: se abrisse sempre em 'NIMA', salvar trocaria em silêncio o
+    // prefixo de quem usa outro, e o estoque ficaria com dois padrões.
+    setAlvo(o); setPrefixo(o.prefixo_tag || 'NIMA');
+    setResultado(null); setBloqueadas(null); setTagsOng([]); setModal('patinhas');
     try {
       const atuais = await devService.listarTags(o.id);
       setTagsOng(atuais);
@@ -256,17 +260,28 @@ export default function GestaoOngs() {
             <p className="modal-sub">
               Defina <strong>quantas Patinhas esta ONG tem</strong> — o número é o total, não um acréscimo.
               Subir cria as que faltam; descer remove as últimas da sequência.
+              {/* "Livre" desde a 018 exige também não ter dono nem reserva:
+                  `ong_id` virou a ONG EMISSORA, então a tag entregue continua
+                  aparecendo no estoque se a gente contar só por ela. */}
               {' '}Hoje: <strong>{tagsOng.length}</strong> no total ·{' '}
-              <strong>{tagsOng.filter((t) => !t.animal_id).length}</strong> livres ·{' '}
-              <strong>{tagsOng.filter((t) => t.animal_id).length}</strong> em uso.
+              <strong>{tagsOng.filter((t) => !t.animal_id && !t.tutor_id && !t.reservado_para).length}</strong> livres ·{' '}
+              <strong>{tagsOng.filter((t) => t.animal_id).length}</strong> em pets ·{' '}
+              <strong>{tagsOng.filter((t) => t.tutor_id).length}</strong> entregues.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <S.Field>Quantidade total
                 <S.Input type="number" min="0" max="500" value={qtd} onChange={(e) => setQtd(e.target.value)} />
               </S.Field>
+              {/* Sem o hífen: o backend junta como PREFIXO-0001. De 2 a 12
+                  letras ou números — ele recusa qualquer outra coisa. */}
               <S.Field>Prefixo do código
-                <S.Input value={prefixo} onChange={(e) => setPrefixo(e.target.value)} placeholder="NIMA-" />
+                <S.Input
+                  value={prefixo}
+                  onChange={(e) => setPrefixo(e.target.value.toUpperCase())}
+                  placeholder="NIMA"
+                  maxLength={12}
+                />
               </S.Field>
             </div>
 
@@ -276,7 +291,7 @@ export default function GestaoOngs() {
               <div style={{ background: 'var(--sky)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
                 <strong style={{ fontSize: 13, color: 'var(--blue)' }}>Endereço gravado nas tags</strong>
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12.5, marginTop: 6, color: 'var(--ink)', wordBreak: 'break-all' }}>
-                  https://adotenima.com.br/tag/{alvo.slug}/{prefixo}0001
+                  https://adotenima.com.br/tag/{alvo.slug}/{prefixo || 'NIMA'}-0001
                 </div>
               </div>
             )}
@@ -284,11 +299,20 @@ export default function GestaoOngs() {
             {bloqueadas && (
               <div style={{ background: 'rgba(229,72,77,0.1)', border: '1px solid rgba(229,72,77,0.3)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
                 <strong style={{ color: '#c0343a' }}>Estas Patinhas estão em uso e não podem ser removidas:</strong>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12.5, marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: '4px 10px' }}>
-                  {bloqueadas.map((t) => <span key={t.id}>{t.codigo}</span>)}
+                {/* Desde a 018 o motivo importa: uma tag já entregue a um tutor
+                    não volta para o estoque, e apagá-la quebraria o link
+                    impresso no objeto que está na mão da pessoa. */}
+                <div style={{ fontSize: 12.5, marginTop: 6, display: 'grid', gap: 4 }}>
+                  {bloqueadas.map((t) => (
+                    <div key={t.id}>
+                      <span style={{ fontFamily: 'ui-monospace, monospace' }}>{t.codigo}</span>
+                      {t.motivo && <span style={{ color: 'var(--ink-soft)' }}> — {t.motivo}</span>}
+                    </div>
+                  ))}
                 </div>
                 <div style={{ fontSize: 12.5, marginTop: 8, color: 'var(--ink-soft)' }}>
-                  Peça à ONG para desvincular esses pets antes de reduzir o estoque.
+                  As vinculadas a um pet a ONG consegue desvincular. As já entregues a um
+                  tutor não voltam para o estoque — o objeto está com a pessoa.
                 </div>
               </div>
             )}
@@ -301,11 +325,16 @@ export default function GestaoOngs() {
                   {resultado.removidas > 0 && ` · ${resultado.removidas} removida(s)`}
                 </strong>
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12.5, marginTop: 6, color: 'var(--ink)', display: 'flex', flexWrap: 'wrap', gap: '4px 10px' }}>
-                  {(resultado.tags || []).map((t) => (
-                    <span key={t.id} style={{ opacity: t.animal_id ? 0.55 : 1 }}>
-                      {t.codigo}{t.animal_id ? ' (em uso)' : ''}
-                    </span>
-                  ))}
+                  {(resultado.tags || []).map((t) => {
+                    const situacao = t.tutor_id ? 'entregue'
+                      : t.reservado_para ? 'reservada'
+                        : t.animal_id ? 'em uso' : null;
+                    return (
+                      <span key={t.id} style={{ opacity: situacao ? 0.55 : 1 }}>
+                        {t.codigo}{situacao ? ` (${situacao})` : ''}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}
