@@ -111,19 +111,28 @@ export default function Candidaturas() {
 
                 {/* dossiê + IA */}
                 <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                     <Sparkles size={16} style={{ color: 'var(--blue)' }} />
-                    <strong style={{ fontSize: 14 }}>Parecer da IA</strong>
-                    {d && <S.Badge $tone={scoreTone(d.score_ia)}>{d.score_ia != null ? `${d.score_ia}/100` : 'sem nota'}</S.Badge>}
-                    {d && <S.Badge $tone="gray">{d.status_analise || 'pendente'}</S.Badge>}
+                    <strong style={{ fontSize: 14 }}>Parecer da IA — esta dupla</strong>
+                    <S.Badge $tone={scoreTone(s.analise?.score)}>{s.analise?.score != null ? `${s.analise.score}/100` : 'sem nota'}</S.Badge>
+                    <S.Badge $tone="gray">{s.analise?.status || 'pendente'}</S.Badge>
                   </div>
 
-                  {!d ? (
-                    <p style={{ fontSize: 13.5, color: 'var(--ink-soft)' }}>Este candidato ainda não respondeu o questionário — análise indisponível.</p>
-                  ) : d.relatorio_ia ? (
-                    <div style={{ fontSize: 14, color: 'var(--ink)', whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>{comNegrito(d.relatorio_ia)}</div>
+                  {/* Fluxo 2: análise do adotante × ESTE pet (score final da dupla). */}
+                  {s.analise?.relatorio ? (
+                    <div style={{ fontSize: 14, color: 'var(--ink)', whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>{comNegrito(s.analise.relatorio)}</div>
+                  ) : s.analise?.status === 'indisponivel' ? (
+                    <p style={{ fontSize: 13.5, color: 'var(--ink-soft)' }}>Não foi possível gerar o parecer desta candidatura.</p>
                   ) : (
-                    <p style={{ fontSize: 13.5, color: 'var(--ink-soft)' }}>Questionário respondido; parecer da IA ainda em processamento.</p>
+                    <p style={{ fontSize: 13.5, color: 'var(--ink-soft)' }}>Parecer da dupla ainda em processamento.</p>
+                  )}
+
+                  {/* Fluxo 1: perfil do adotante, como contexto recolhível. */}
+                  {d?.relatorio_ia && (
+                    <details style={{ marginTop: 10 }}>
+                      <summary style={{ cursor: 'pointer', fontSize: 13, color: 'var(--ink-soft)' }}>Perfil do adotante</summary>
+                      <div style={{ fontSize: 13.5, color: 'var(--ink)', whiteSpace: 'pre-wrap', lineHeight: 1.5, marginTop: 6 }}>{comNegrito(d.relatorio_ia)}</div>
+                    </details>
                   )}
 
                   {respostas.length > 0 && (
