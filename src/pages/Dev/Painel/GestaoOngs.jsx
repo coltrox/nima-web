@@ -28,7 +28,6 @@ export default function GestaoOngs() {
   // Estoque de Patinhas da ONG (quantidade total, não incremento)
   const [tagsOng, setTagsOng] = useState([]);
   const [qtd, setQtd] = useState(10);
-  const [prefixo, setPrefixo] = useState('NIMA-');
   const [resultado, setResultado] = useState(null);
   const [bloqueadas, setBloqueadas] = useState(null);
 
@@ -100,10 +99,8 @@ export default function GestaoOngs() {
   };
 
   const abrirPatinhas = async (o) => {
-    // O prefixo vem da ONG (profiles.prefixo_tag, migração 018), não de um
-    // padrão fixo: se abrisse sempre em 'NIMA', salvar trocaria em silêncio o
-    // prefixo de quem usa outro, e o estoque ficaria com dois padrões.
-    setAlvo(o); setPrefixo(o.prefixo_tag || 'NIMA');
+    // Desde a 023 o código é global e único (nima-0001): não há mais prefixo por ONG.
+    setAlvo(o);
     setResultado(null); setBloqueadas(null); setTagsOng([]); setModal('patinhas');
     try {
       const atuais = await devService.listarTags(o.id);
@@ -121,7 +118,7 @@ export default function GestaoOngs() {
     if (!Number.isInteger(n) || n < 0) { setErro('Quantidade inválida.'); return; }
     try {
       setSalvando(true); setErro(''); setBloqueadas(null);
-      const r = await devService.definirQuantidadeTags(alvo.id, n, prefixo);
+      const r = await devService.definirQuantidadeTags(alvo.id, n);
       setResultado(r);
       setTagsOng(await devService.listarTags(alvo.id));
     } catch (e) {
@@ -269,32 +266,18 @@ export default function GestaoOngs() {
               <strong>{tagsOng.filter((t) => t.tutor_id).length}</strong> entregues.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <S.Field>Quantidade total
-                <S.Input type="number" min="0" max="500" value={qtd} onChange={(e) => setQtd(e.target.value)} />
-              </S.Field>
-              {/* Sem o hífen: o backend junta como PREFIXO-0001. De 2 a 12
-                  letras ou números — ele recusa qualquer outra coisa. */}
-              <S.Field>Prefixo do código
-                <S.Input
-                  value={prefixo}
-                  onChange={(e) => setPrefixo(e.target.value.toUpperCase())}
-                  placeholder="NIMA"
-                  maxLength={12}
-                />
-              </S.Field>
-            </div>
+            <S.Field>Quantidade total
+              <S.Input type="number" min="0" max="500" value={qtd} onChange={(e) => setQtd(e.target.value)} />
+            </S.Field>
 
-            {/* A URL gravada na tag leva o slug da ONG: o código é único por ONG,
-                não globalmente, então sem o slug duas ONGs colidiriam. */}
-            {alvo.slug && (
-              <div style={{ background: 'var(--sky)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
-                <strong style={{ fontSize: 13, color: 'var(--blue)' }}>Endereço gravado nas tags</strong>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12.5, marginTop: 6, color: 'var(--ink)', wordBreak: 'break-all' }}>
-                  https://adotenima.com.br/tag/{alvo.slug}/{prefixo || 'NIMA'}-0001
-                </div>
+            {/* Desde a 023 o código é global e único (nima-0001): a URL gravada
+                na tag é só /tags/<codigo>, sem slug de ONG nem prefixo. */}
+            <div style={{ background: 'var(--sky)', borderRadius: 12, padding: '12px 14px', margin: '14px 0' }}>
+              <strong style={{ fontSize: 13, color: 'var(--blue)' }}>Endereço gravado nas tags</strong>
+              <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12.5, marginTop: 6, color: 'var(--ink)', wordBreak: 'break-all' }}>
+                https://adotenima.com.br/tags/nima-0001
               </div>
-            )}
+            </div>
 
             {bloqueadas && (
               <div style={{ background: 'rgba(229,72,77,0.1)', border: '1px solid rgba(229,72,77,0.3)', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>

@@ -18,8 +18,8 @@ const DOMINIO = 'adotenima.com.br';
 // Os códigos são sequenciais, então o passo 2 sozinho não prova nada: sem a
 // reserva, adivinhar "NIMA-0002" bastaria para roubar a Patinha do vizinho.
 
-// A URL é sempre /tag/<slug>/<codigo>: o código só é único POR ONG desde a 015.
-const urlDaTag = (t) => `${DOMINIO}${t.url_publica || `/tag/${t.codigo}`}`;
+// Desde a 023 o código é global e único: a URL é sempre /tags/<codigo>.
+const urlDaTag = (t) => `${DOMINIO}${t.url_publica || `/tags/${t.codigo}`}`;
 
 function Situacao({ t }) {
   if (t.tutor) return <S.Badge $tone="navy">Entregue · {t.tutor.nome}</S.Badge>;

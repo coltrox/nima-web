@@ -86,9 +86,10 @@ const devService = {
   },
 
   // Gera um lote de Patinhas para uma ONG (o dev fabrica; a ONG só relaciona).
-  criarTags: async (ong_id, quantidade, prefixo) => {
+  // Desde a 023 o código é global e único (nima-0001): sem prefixo por ONG.
+  criarTags: async (ong_id, quantidade) => {
     try {
-      const response = await axios.post(`${API_URL}/tags`, { ong_id, quantidade, prefixo }, authHeader());
+      const response = await axios.post(`${API_URL}/tags`, { ong_id, quantidade }, authHeader());
       return response.data;
     } catch (error) {
       throw error.response?.data?.message || 'Erro ao gerar Patinhas.';
@@ -105,11 +106,11 @@ const devService = {
    * público pararia de funcionar). Nesse caso a resposta traz `bloqueadas`,
    * por isso o erro aqui preserva o corpo inteiro em vez de virar string.
    */
-  definirQuantidadeTags: async (ong_id, quantidade, prefixo) => {
+  definirQuantidadeTags: async (ong_id, quantidade) => {
     try {
       const response = await axios.put(
         `${API_URL}/ongs/${ong_id}/tags`,
-        { quantidade, prefixo },
+        { quantidade },
         authHeader(),
       );
       return response.data;

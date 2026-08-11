@@ -47,4 +47,11 @@ export const eventoService = {
     `${API_URL}/eventos/participacoes/${participacaoId}/presenca`,
     { method: 'PUT', headers: jsonHeaders(), body: JSON.stringify({ presente }) },
   ).then((r) => json(r, 'Erro ao marcar presença.')),
+
+  // Transfere uma Patinha do estoque da ONG direto pra posse do voluntário
+  // presente. Exige presença confirmada e Patinha livre no estoque.
+  transferirPatinha: (participacaoId) => fetch(
+    `${API_URL}/eventos/participacoes/${participacaoId}/patinha`,
+    { method: 'POST', headers: auth() },
+  ).then((r) => json(r, 'Erro ao transferir a Patinha.')),
 };

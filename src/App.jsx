@@ -21,7 +21,10 @@ function App() {
           <Route path="/" element={<Landing />} />
 
           {/* ---------- Patinha (Smart Tag) — público ---------- */}
-          {/* Escaneou a tag: registra leitura + geo e manda pra ficha do pet */}
+          {/* Escaneou a tag: registra leitura + geo e manda pra ficha do pet.
+              Formato atual (023): /tags/<codigo> — código global único (nima-0001).
+              /tag/<codigo> (singular) fica como legado. */}
+          <Route path="/tags/:codigo" element={<TagRedirect />} />
           <Route path="/tag/:codigo" element={<TagRedirect />} />
           {/* Ficha pública antiperda do pet (link compartilhável) */}
           <Route path="/pets/:id" element={<PetFicha />} />

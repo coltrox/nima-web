@@ -1,9 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { Check, X, Mail, Phone, Sparkles, ClipboardList, ChevronDown } from 'lucide-react';
+import { Check, X, Mail, Phone, Sparkles, ClipboardList, ChevronDown, FileText, MapPin, MessageCircle, PackageCheck } from 'lucide-react';
 import { solicitacaoService } from '../../../services/solicitacaoService';
 import * as S from '../../Panel/panelStyles';
 
-const STATUS_TONE = { pendente: 'amber', aprovada: 'green', recusada: 'red' };
+const STATUS_TONE = { pendente: 'amber', aprovada: 'green', entregue: 'blue', recusada: 'red' };
+const STATUS_ROTULO = { pendente: 'pendente', aprovada: 'aceita', entregue: 'entregue', recusada: 'recusada' };
+
+// wa.me com mensagem pré-preenchida (ONG → tutor). Assume Brasil se vier sem DDI.
+function waLink(numero, texto) {
+  const limpo = String(numero || '').replace(/\D/g, '');
+  if (!limpo) return null;
+  const comDDI = limpo.length <= 11 ? `55${limpo}` : limpo;
+  return `https://wa.me/${comDDI}?text=${encodeURIComponent(texto)}`;
+}
+const msgEntrega = (s) =>
+  `Olá, ${s.candidato?.nome || ''}! Sua adoção do ${s.animal?.nome || 'pet'} foi aceita 🐾 `
+  + `Vamos combinar a entrega: posso tirar as suas dúvidas e, se possível, me envie uma foto do local onde `
+  + `o ${s.animal?.nome || 'pet'} vai ficar, para marcarmos um encontro. Obrigado!`;
 
 // Converte o parecer da IA (marcações **negrito**) em nós React, sem HTML cru.
 function comNegrito(txt) {
@@ -47,7 +60,7 @@ export default function Candidaturas() {
 
   const decidir = async (id, status) => {
     const msg = status === 'aprovada'
-      ? 'Aprovar esta adoção? O animal será marcado como Adotado e as demais candidaturas dele serão recusadas.'
+      ? 'Aceitar esta candidatura? O pet fica reservado (Em Triagem) e você combina a entrega com o adotante pelo WhatsApp. A posse só passa quando você marcar "Entregue".'
       : 'Recusar esta candidatura?';
     if (!window.confirm(msg)) return;
     try {
@@ -57,6 +70,21 @@ export default function Candidaturas() {
       await carregar();
     } catch (e) {
       setErro(e.message || 'Erro ao decidir.');
+    } finally {
+      setDecidindo(null);
+    }
+  };
+
+  // Passo final: entregou o animal em mãos. Transfere posse + Patinha ao tutor.
+  const entregar = async (id) => {
+    if (!window.confirm('Confirmar a ENTREGA deste pet? A posse (e a Patinha, se houver) passam ao adotante e as demais candidaturas são encerradas. Isso conclui a adoção.')) return;
+    try {
+      setDecidindo(id);
+      setErro('');
+      await solicitacaoService.entregar(id);
+      await carregar();
+    } catch (e) {
+      setErro(e.message || 'Erro ao registrar a entrega.');
     } finally {
       setDecidindo(null);
     }
@@ -94,14 +122,31 @@ export default function Candidaturas() {
                       {s.animal?.especie ? ` · ${s.animal.especie}` : ''}
                     </div>
                   </div>
-                  <S.Badge $tone={STATUS_TONE[s.status] || 'gray'}>{s.status}</S.Badge>
+                  <S.Badge $tone={STATUS_TONE[s.status] || 'gray'}>{STATUS_ROTULO[s.status] || s.status}</S.Badge>
                 </div>
 
                 {/* contato */}
                 <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 12, color: 'var(--ink-soft)', fontSize: 13.5 }}>
                   {s.candidato?.email && <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}><Mail size={14} /> {s.candidato.email}</span>}
-                  {s.candidato?.telefone && <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}><Phone size={14} /> {s.candidato.telefone}</span>}
+                  {(s.candidato?.telefone || s.candidato?.whatsapp) && <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}><Phone size={14} /> {s.candidato.telefone || s.candidato.whatsapp}</span>}
+                  {s.candidato?.endereco && <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}><MapPin size={14} /> {s.candidato.endereco}</span>}
                 </div>
+
+                {/* documentos do dossiê (bucket privado, signed URL) */}
+                {(s.dossie?.documentos?.documento_url || s.dossie?.documentos?.comprovante_url) && (
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+                    {s.dossie.documentos.documento_url && (
+                      <S.Btn as="a" href={s.dossie.documentos.documento_url} target="_blank" rel="noreferrer" $variant="ghost" $sm>
+                        <FileText size={15} /> {s.dossie.documentos.tipo || 'Documento'}
+                      </S.Btn>
+                    )}
+                    {s.dossie.documentos.comprovante_url && (
+                      <S.Btn as="a" href={s.dossie.documentos.comprovante_url} target="_blank" rel="noreferrer" $variant="ghost" $sm>
+                        <FileText size={15} /> Comprovante de endereço
+                      </S.Btn>
+                    )}
+                  </div>
+                )}
 
                 {s.mensagem && (
                   <p style={{ marginTop: 12, fontSize: 14, color: 'var(--ink)', background: 'var(--sand)', padding: '10px 12px', borderRadius: 10 }}>
@@ -113,7 +158,7 @@ export default function Candidaturas() {
                 <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                     <Sparkles size={16} style={{ color: 'var(--blue)' }} />
-                    <strong style={{ fontSize: 14 }}>Parecer da IA — esta dupla</strong>
+                    <strong style={{ fontSize: 14 }}>Análise desta candidatura</strong>
                     <S.Badge $tone={scoreTone(s.analise?.score)}>{s.analise?.score != null ? `${s.analise.score}/100` : 'sem nota'}</S.Badge>
                     <S.Badge $tone="gray">{s.analise?.status || 'pendente'}</S.Badge>
                   </div>
@@ -161,7 +206,32 @@ export default function Candidaturas() {
                 {s.status === 'pendente' && (
                   <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
                     <S.Btn $variant="danger" $sm disabled={decidindo === s.id} onClick={() => decidir(s.id, 'recusada')}><X size={15} /> Recusar</S.Btn>
-                    <S.Btn $variant="primary" $sm disabled={decidindo === s.id} onClick={() => decidir(s.id, 'aprovada')}><Check size={15} /> Aprovar</S.Btn>
+                    <S.Btn $variant="primary" $sm disabled={decidindo === s.id} onClick={() => decidir(s.id, 'aprovada')}><Check size={15} /> Aceitar candidatura</S.Btn>
+                  </div>
+                )}
+
+                {/* Aceita: combine a entrega pelo WhatsApp e, ao entregar em mãos, conclua. */}
+                {s.status === 'aprovada' && (
+                  <>
+                    <div style={{ marginTop: 14, background: 'var(--sky)', padding: '10px 12px', borderRadius: 10, fontSize: 13.5, color: 'var(--ink)' }}>
+                      Candidatura aceita. Fale com o adotante para tirar dúvidas, pedir uma foto do local onde o pet vai ficar e marcar o encontro. Quando entregar o animal, marque como <strong>Entregue</strong>.
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 12, flexWrap: 'wrap' }}>
+                      <S.Btn $variant="danger" $sm disabled={decidindo === s.id} onClick={() => decidir(s.id, 'recusada')}><X size={15} /> Recusar</S.Btn>
+                      {waLink(s.candidato?.whatsapp || s.candidato?.telefone, msgEntrega(s)) && (
+                        <S.Btn as="a" href={waLink(s.candidato?.whatsapp || s.candidato?.telefone, msgEntrega(s))} target="_blank" rel="noreferrer" $sm
+                          style={{ background: '#25D366', borderColor: '#25D366', color: '#fff' }}>
+                          <MessageCircle size={15} /> WhatsApp do adotante
+                        </S.Btn>
+                      )}
+                      <S.Btn $variant="primary" $sm disabled={decidindo === s.id} onClick={() => entregar(s.id)}><PackageCheck size={15} /> Marcar como entregue</S.Btn>
+                    </div>
+                  </>
+                )}
+
+                {s.status === 'entregue' && (
+                  <div style={{ marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--moss)', fontSize: 13.5, fontWeight: 700 }}>
+                    <PackageCheck size={16} /> Adoção concluída — o pet foi entregue ao adotante.
                   </div>
                 )}
               </S.Card>

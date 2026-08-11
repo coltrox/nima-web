@@ -13,7 +13,8 @@ export const solicitacaoService = {
     return r.json();
   },
 
-  // Decide uma candidatura. status: 'aprovada' | 'recusada'
+  // Aceita/recusa uma candidatura. status: 'aprovada' | 'recusada'.
+  // ACEITAR não transfere o pet ainda — só reserva e libera combinar a entrega.
   async decidir(id, status) {
     const r = await fetch(`${API_URL}/solicitacoes/${id}`, {
       method: 'PUT',
@@ -23,6 +24,20 @@ export const solicitacaoService = {
     if (!r.ok) {
       const e = await r.json().catch(() => ({}));
       throw new Error(e.error || e.message || 'Erro ao decidir candidatura.');
+    }
+    return r.json();
+  },
+
+  // Passo 2: marca a adoção como ENTREGUE. É aqui que a posse (e a Patinha)
+  // passam ao tutor e o pet vira "Adotado".
+  async entregar(id) {
+    const r = await fetch(`${API_URL}/solicitacoes/${id}/entregar`, {
+      method: 'PUT',
+      headers: auth(),
+    });
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.error || e.message || 'Erro ao registrar a entrega.');
     }
     return r.json();
   },

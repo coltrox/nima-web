@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Plus, CalendarDays, MapPin, Mail, Phone, Trash2, Check, X, RotateCcw, UserCheck, Undo2,
+  Plus, CalendarDays, MapPin, Mail, Phone, Trash2, Check, X, RotateCcw, UserCheck, Undo2, PawPrint,
 } from 'lucide-react';
 import { eventoService } from '../../../services/eventoService';
 import * as S from '../../Panel/panelStyles';
@@ -105,6 +105,18 @@ export default function Eventos() {
       await carregar();
     } catch (e) {
       setErro(e.message || 'Erro ao atualizar a candidatura.');
+    }
+  };
+
+  const transferir = async (participacao) => {
+    if (!window.confirm('Transferir uma Patinha do estoque para este voluntário? A posse passa direto para ele.')) return;
+    try {
+      setErro('');
+      const r = await eventoService.transferirPatinha(participacao.id);
+      await carregar();
+      window.alert(r?.message || 'Patinha transferida.');
+    } catch (e) {
+      setErro(e.message || 'Erro ao transferir a Patinha.');
     }
   };
 
@@ -236,9 +248,14 @@ export default function Eventos() {
                                 O backend também barra — aqui é para não oferecer o botão à toa. */}
                             {p.status === 'aceito' && ev.ja_aconteceu && (
                               p.presente ? (
-                                <S.Btn $sm $variant="subtle" onClick={() => presenca(p, false)} title="Desfazer presença">
-                                  <Undo2 size={14} /> Desfazer
-                                </S.Btn>
+                                <>
+                                  <S.Btn $sm $variant="subtle" onClick={() => presenca(p, false)} title="Desfazer presença">
+                                    <Undo2 size={14} /> Desfazer
+                                  </S.Btn>
+                                  <S.Btn $sm $variant="primary" onClick={() => transferir(p)} title="Dar uma Patinha do estoque">
+                                    <PawPrint size={14} /> Transferir Patinha
+                                  </S.Btn>
+                                </>
                               ) : (
                                 <S.Btn $sm $variant="primary" onClick={() => presenca(p, true)}>
                                   <UserCheck size={14} /> Marcar presença
