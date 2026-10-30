@@ -35,6 +35,7 @@
 }
 
 html {
+  overflow-x: clip;
   scroll-behavior: smooth;
   scroll-padding-top: 88px; /* compensa a navbar fixa nas âncoras */
 }
@@ -46,7 +47,8 @@ body {
   font-family: var(--body);
   font-size: 16px;
   line-height: 1.5;
-  overflow-x: hidden;
+  /* clip, nunca hidden: overflow-x:hidden mata position:sticky */
+  overflow-x: clip;
 }
 
 #root {
