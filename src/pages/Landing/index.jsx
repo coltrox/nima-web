@@ -38,9 +38,15 @@ import {
   ScanLine,
   Zap,
   Home,
+  Mail,
+  Globe,
+  AtSign,
+  ArrowUp,
+  FileText,
 } from 'lucide-react';
 
 import * as S from './styles';
+import { EMPRESA, PRODUTO } from '../../config/empresa';
 import { Contador, Esteira, Flutua, Manchas, Reveal, RevealStack } from './anim';
 import { useParallaxSuave, usePonteiro } from './motion';
 
@@ -358,15 +364,17 @@ export default function Landing() {
           </S.Layer>
 
           <S.HeroStage>
-            <Flutua distancia={9} duration={6.5} style={{ position: 'absolute', top: '-18px', left: '-14px', zIndex: 2 }}>
-              <S.FloatChip as="div" $static>
-                <ClipboardList size={20} />
-                <div>
-                  <strong>Quiz respondido</strong>
-                  <span>perfil e estilo de vida analisados pela IA</span>
-                </div>
-              </S.FloatChip>
-            </Flutua>
+            <S.ChipSlot>
+              <Flutua distancia={9} duration={6.5}>
+                <S.FloatChip as="div" $static>
+                  <ClipboardList size={20} />
+                  <div>
+                    <strong>Quiz respondido</strong>
+                    <span>perfil e estilo de vida analisados pela IA</span>
+                  </div>
+                </S.FloatChip>
+              </Flutua>
+            </S.ChipSlot>
 
             <motion.div style={{ y: cardY, zIndex: 1 }}>
               <motion.div {...ponteiro.handlers} style={ponteiro.style}>
@@ -1401,49 +1409,134 @@ export default function Landing() {
       {/* ------------------------- RODAPÉ ------------------------- */}
       <S.Footer>
         <S.FooterGrid as="div">
-          <div>
+          <S.FooterSobre>
             <S.FooterBrand href="#topo">
-              <S.FooterLogo src="/nima-logo-white.png" alt="Nima" />
+              <S.FooterLogo src="/nima-logo-white.png" alt={PRODUTO.nome} />
             </S.FooterBrand>
             <p>
               Adoção com afinidade, cuidado depois do sim e um caminho de volta pra casa. Um
-              ecossistema para adotantes, tutores e ONGs.
+              ecossistema para adotantes, tutores e as ONGs que seguram a ponta.
             </p>
-          </div>
+            <S.FooterSelos>
+              <S.FooterSelo>
+                <Heart size={14} strokeWidth={2.6} />
+                Gratuito para adotar
+              </S.FooterSelo>
+              <S.FooterSelo>
+                <HeartHandshake size={14} strokeWidth={2.6} />
+                Sem taxa para ONGs
+              </S.FooterSelo>
+              <S.FooterSelo>
+                <GraduationCap size={14} strokeWidth={2.6} />
+                Projeto de TCC
+              </S.FooterSelo>
+            </S.FooterSelos>
+          </S.FooterSobre>
 
-          <div>
-            <h4>Plataforma</h4>
+          <S.FooterCol>
+            <h4>O app</h4>
             <a href="#desafio">O desafio</a>
             <a href="#solucao">A solução</a>
             <a href="#match">Simular match</a>
             <a href="#cuidado">Meu Pet</a>
-            <a href="#app">O app</a>
-          </div>
+            <a href="#app">Baixar o app</a>
+          </S.FooterCol>
 
-          <div>
+          <S.FooterCol>
             <h4>Patinha</h4>
             <a href="#tag">Como funciona</a>
             <a href="#limites">Faz e não faz</a>
-            <a href="#seguranca">Segurança</a>
+            <a href="#seguranca">Segurança e LGPD</a>
             <a href="#faq">Perguntas frequentes</a>
-          </div>
+          </S.FooterCol>
 
-          <div>
+          <S.FooterCol>
             <h4>Para ONGs</h4>
-            <Link to="/login">Entrar no painel</Link>
-            <Link to="/ong">Cadastrar minha ONG</Link>
-            <a href="https://instagram.com/adote.nima" target="_blank" rel="noreferrer">
-              @adote.nima
+            <Link to="/ong">Ser uma ONG parceira</Link>
+            <Link to="/ong/registro">Cadastrar minha ONG</Link>
+            <Link to="/ong/login">Entrar no painel</Link>
+            <a href="#ongs">O que muda no dia a dia</a>
+          </S.FooterCol>
+
+          <S.FooterCol>
+            <h4>Empresa</h4>
+            <S.FooterEmpresa>
+              {PRODUTO.nome} é um produto da <strong>{EMPRESA.nome}</strong>.
+            </S.FooterEmpresa>
+
+            <S.FooterContato href={EMPRESA.site} target="_blank" rel="noreferrer">
+              <Globe size={15} strokeWidth={2.3} />
+              {EMPRESA.siteRotulo}
+            </S.FooterContato>
+            <S.FooterContato href={`mailto:${EMPRESA.email}`}>
+              <Mail size={15} strokeWidth={2.3} />
+              {EMPRESA.email}
+            </S.FooterContato>
+            <S.FooterContato href={`mailto:${PRODUTO.email}`}>
+              <Mail size={15} strokeWidth={2.3} />
+              {PRODUTO.email}
+            </S.FooterContato>
+            <S.FooterContato href={PRODUTO.instagram} target="_blank" rel="noreferrer">
+              <AtSign size={15} strokeWidth={2.3} />
+              {PRODUTO.instagramRotulo}
+            </S.FooterContato>
+
+            {EMPRESA.telefone && (
+              <S.FooterContato href={`tel:${EMPRESA.telefone.replace(/\D/g, '')}`}>
+                <Phone size={15} strokeWidth={2.3} />
+                {EMPRESA.telefone}
+              </S.FooterContato>
+            )}
+            {EMPRESA.endereco && (
+              <S.FooterDado>
+                <MapPin size={15} strokeWidth={2.3} />
+                {EMPRESA.endereco}
+              </S.FooterDado>
+            )}
+            {EMPRESA.cnpj && (
+              <S.FooterDado>
+                <FileText size={15} strokeWidth={2.3} />
+                CNPJ {EMPRESA.cnpj}
+              </S.FooterDado>
+            )}
+
+            <h4>Legal</h4>
+            <Link to="/privacidade">Política de Privacidade</Link>
+            <Link to="/termos">Termos de Uso</Link>
+            <a href={`mailto:${PRODUTO.email}?subject=Meus%20dados%20na%20Nima`}>
+              Pedir ou apagar meus dados
             </a>
-            <a href="mailto:contato@adotenima.com.br">contato@adotenima.com.br</a>
-          </div>
+          </S.FooterCol>
         </S.FooterGrid>
 
+        <S.FooterAviso>
+          <div>
+            <p>
+              <strong>Aviso importante.</strong> A Patinha não é um rastreador por GPS: ela não
+              emite sinal e não tem bateria, então mostra onde o pet foi lido, não onde ele está
+              agora. A nota de afinidade é uma sugestão da IA — quem entrevista, aprova e entrega o
+              animal é sempre a ONG responsável. Os guias de raça, nutrição e saúde orientam, mas
+              não substituem a consulta com um médico-veterinário.
+            </p>
+          </div>
+        </S.FooterAviso>
+
         <S.FooterBottom as="div">
-          <span>© {new Date().getFullYear()} Nima · adotenima.com.br</span>
-          <span>Projeto acadêmico — Trabalho de Conclusão de Curso</span>
+          <span>
+            © {new Date().getFullYear()} {EMPRESA.nome}. Todos os direitos reservados. ·{' '}
+            {PRODUTO.siteRotulo}
+          </span>
+          <nav>
+            <Link to="/privacidade">Privacidade</Link>
+            <Link to="/termos">Termos</Link>
+            <S.AoTopo type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <ArrowUp size={14} strokeWidth={2.4} />
+              Voltar ao topo
+            </S.AoTopo>
+          </nav>
         </S.FooterBottom>
       </S.Footer>
+
     </S.Page>
   );
 }
