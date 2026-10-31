@@ -9,8 +9,8 @@ export const EMPRESA = {
   site: 'https://ccosoftwarelab.com',
   siteRotulo: 'ccosoftwarelab.com',
   email: 'support@ccosoftwarelab.com',
+  cnpj: '69.081.944/0001-37',
   /* Campos opcionais: ficam fora do rodapé enquanto estiverem vazios. */
-  cnpj: '',
   telefone: '',
   endereco: '',
 };

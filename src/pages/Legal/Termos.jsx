@@ -5,7 +5,9 @@ export default function Termos() {
     <>
       <p>
         Estes termos regem o uso do {PRODUTO.nome}, plataforma de adoção mantida pela{' '}
-        {EMPRESA.nome}. Ao criar uma conta, você concorda com o que está escrito aqui.
+        {EMPRESA.nome}
+        {EMPRESA.cnpj ? ` (CNPJ ${EMPRESA.cnpj})` : ''}. Ao criar uma conta, você concorda com o
+        que está escrito aqui.
       </p>
 
       <h2>O que o {PRODUTO.nome} é</h2>

@@ -6,7 +6,8 @@ export default function Privacidade() {
       <p>
         Esta política explica quais dados o {PRODUTO.nome} coleta, por que coleta e o que você
         pode exigir a respeito deles. Ela segue a Lei Geral de Proteção de Dados (Lei nº
-        13.709/2018). O controlador dos dados é a {EMPRESA.nome}.
+        13.709/2018). O controlador dos dados é a {EMPRESA.nome}
+        {EMPRESA.cnpj ? `, inscrita no CNPJ sob o nº ${EMPRESA.cnpj}` : ''}.
       </p>
 
       <h2>Quais dados coletamos</h2>
