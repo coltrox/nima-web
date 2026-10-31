@@ -373,6 +373,19 @@ export const FloatChip = styled.div`
   }
 `;
 
+/* Encaixe do chip "Quiz respondido": fica à esquerda do cartão e
+   recolhe conforme a tela estreita, para não entrar no título. */
+export const ChipSlot = styled.div`
+  position: absolute;
+  z-index: 2;
+  top: -30px;
+  left: calc(-70px + max(0px, (1280px - 100vw) * 0.3));
+
+  @media (max-width: 960px) {
+    left: -12px;
+  }
+`;
+
 export const MatchCard = styled.div`
   position: relative;
   z-index: 1;
@@ -403,7 +416,8 @@ export const MatchPhoto = styled.div`
 export const MatchBadge = styled.span`
   position: absolute;
   top: 12px;
-  left: 12px;
+  /* à direita: o canto esquerdo é do chip "Quiz respondido" */
+  right: 12px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -764,53 +778,6 @@ export const Footer = styled.footer`
   padding: 64px 0 32px;
 `;
 
-export const FooterGrid = styled.div`
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: grid;
-  grid-template-columns: 1.6fr 1fr 1fr 1fr;
-  gap: 40px;
-
-  > * {
-    min-width: 0;
-  }
-
-  p {
-    margin: 16px 0 0;
-    font-size: 14px;
-    line-height: 1.6;
-    max-width: 320px;
-  }
-
-  h4 {
-    margin: 0 0 16px;
-    font-size: 14px;
-    color: #fff;
-  }
-
-  a {
-    display: block;
-    margin-bottom: 10px;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.72);
-    text-decoration: none;
-  }
-
-  a:hover {
-    color: #fff;
-  }
-
-  @media (max-width: 980px) {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
 export const FooterBrand = styled.a`
   display: inline-flex;
   align-items: center;
@@ -820,24 +787,6 @@ export const FooterBrand = styled.a`
   font-size: 20px;
   color: #fff;
   text-decoration: none;
-`;
-
-export const FooterBottom = styled.div`
-  width: 100%;
-  max-width: 1180px;
-  margin: 48px auto 0;
-  padding: 24px 24px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 13px;
-
-  @media (max-width: 600px) {
-    flex-direction: column;
-    text-align: center;
-  }
 `;
 
 /* ---------------------------------------------------------------- */
@@ -1883,5 +1832,233 @@ export const EsteiraChip = styled.span`
   svg {
     color: var(--blue);
     flex-shrink: 0;
+  }
+`;
+
+/* ---------------------------------------------------------------- */
+/* Rodapé                                                            */
+/* ---------------------------------------------------------------- */
+
+export const FooterGrid = styled.div`
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1.6fr 0.9fr 0.9fr 0.9fr 1.5fr;
+  gap: 40px 32px;
+
+  > * {
+    min-width: 0;
+  }
+
+  @media (max-width: 1040px) {
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 40px 32px;
+  }
+
+  @media (max-width: 680px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 440px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const FooterCol = styled.div`
+  h4 {
+    margin: 0 0 18px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+    color: #fff;
+  }
+
+  h4:not(:first-child) {
+    margin-top: 30px;
+  }
+
+  a {
+    display: block;
+    margin-bottom: 11px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.72);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  a:hover {
+    color: #fff;
+  }
+`;
+
+export const FooterSobre = styled.div`
+  p {
+    margin: 16px 0 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.72);
+    max-width: 330px;
+  }
+`;
+
+export const FooterSelos = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 20px;
+`;
+
+export const FooterSelo = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.84);
+
+  svg {
+    flex-shrink: 0;
+    color: var(--honey);
+  }
+`;
+
+export const FooterEmpresa = styled.p`
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.72);
+
+  strong {
+    color: #fff;
+    font-weight: 600;
+  }
+`;
+
+export const FooterContato = styled.a`
+  display: flex !important;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  overflow-wrap: break-word;
+  min-width: 0;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--honey);
+  }
+
+  &:hover {
+    color: #fff;
+  }
+`;
+
+export const FooterDado = styled.span`
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--honey);
+  }
+`;
+
+export const FooterAviso = styled.div`
+  width: 100%;
+  max-width: 1180px;
+  margin: 56px auto 0;
+  padding: 0 24px;
+
+  > div {
+    padding: 22px 24px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  strong {
+    color: #fff;
+  }
+`;
+
+export const FooterBottom = styled.div`
+  width: 100%;
+  max-width: 1180px;
+  margin: 40px auto 0;
+  padding: 24px 24px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+
+  nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 22px;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.72);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: #fff;
+  }
+
+  @media (max-width: 680px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+`;
+
+export const AoTopo = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+
+  &:hover {
+    color: #fff;
   }
 `;

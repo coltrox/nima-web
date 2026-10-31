@@ -10,6 +10,7 @@ import DevDashboard from './pages/Home/Dev/DevDashboard.jsx';
 import OngPainel from './pages/Ong/Painel/OngPainel.jsx';
 import TagRedirect from './pages/Publico/TagRedirect.jsx';
 import PetFicha from './pages/Publico/PetFicha.jsx';
+import Legal from './pages/Legal/index.jsx';
 
 function App() {
   return (
@@ -28,6 +29,10 @@ function App() {
           <Route path="/tag/:codigo" element={<TagRedirect />} />
           {/* Ficha pública antiperda do pet (link compartilhável) */}
           <Route path="/pets/:id" element={<PetFicha />} />
+
+          {/* ---------------- Legal — público ---------------- */}
+          <Route path="/privacidade" element={<Legal documento="privacidade" />} />
+          <Route path="/termos" element={<Legal documento="termos" />} />
 
           {/* ---------------- ONG ---------------- */}
           {/* Página pública de captação de ONGs */}
