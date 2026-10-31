@@ -1509,18 +1509,6 @@ export default function Landing() {
           </S.FooterCol>
         </S.FooterGrid>
 
-        <S.FooterAviso>
-          <div>
-            <p>
-              <strong>Aviso importante.</strong> A Patinha não é um rastreador por GPS: ela não
-              emite sinal e não tem bateria, então mostra onde o pet foi lido, não onde ele está
-              agora. A nota de afinidade é uma sugestão da IA — quem entrevista, aprova e entrega o
-              animal é sempre a ONG responsável. Os guias de raça, nutrição e saúde orientam, mas
-              não substituem a consulta com um médico-veterinário.
-            </p>
-          </div>
-        </S.FooterAviso>
-
         <S.FooterBottom as="div">
           <span>
             © {new Date().getFullYear()} {EMPRESA.nome}. Todos os direitos reservados. ·{' '}
